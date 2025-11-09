@@ -11,7 +11,7 @@ export const SellerType = {
 export type SellerType = typeof SellerType[keyof typeof SellerType]
 
 
-export interface Vendedor {
+export interface Seller {
   id: string;
   name: string;
   dni: string;
@@ -20,8 +20,8 @@ export interface Vendedor {
   status: SellerStatus;
 }
 
-export interface VendedorTableProps {
-  sellers: Vendedor[];
+export interface SellerTableProps {
+  sellers: Seller[];
 }
 
 export interface TypePillProps {

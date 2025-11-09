@@ -1,6 +1,6 @@
-import { SellerType } from "../types/vendedores.types";
+import { SellerType } from "../types/seller.types";
 
-const VendedorToolbar = () => (
+const SellerToolbar = () => (
   <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 mb-6">
     {/* Barra de Búsqueda */}
     <div className="w-full md:w-1/3">
@@ -33,4 +33,4 @@ const VendedorToolbar = () => (
 );
 
 
-export default VendedorToolbar;
+export default SellerToolbar;

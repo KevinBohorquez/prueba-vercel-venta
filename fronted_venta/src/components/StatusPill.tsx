@@ -1,4 +1,4 @@
-import { type StatusPillProps, SellerStatus } from "../types/vendedores.types";
+import { type StatusPillProps, SellerStatus } from "../types/seller.types";
 
 const StatusPill = ({ status }: StatusPillProps) => {
   const isActive = status === SellerStatus.Activo;

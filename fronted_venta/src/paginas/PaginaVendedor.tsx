@@ -1,12 +1,12 @@
 import { useState } from "react";
-import VendedorTable from "../components/SellerTable";
-import VendedorToolbar from "../components/VendedorToolbar";
-import { type Vendedor, SellerType, SellerStatus } from "../types/vendedores.types";
+import SellerToolbar from "../components/SellerToolbar";
+import SellerTable from "../components/SellerTable";
+import { type Seller, SellerType, SellerStatus } from "../types/seller.types";
 
 type TabId = 'vendedores' | 'sedes';
 
 // Datos simulados para los vendedores
-const mockSellers: Vendedor[] = [
+const mockSellers: Seller[] = [
   {
     id: 'V-INT-001',
     name: 'Ana Gómez',
@@ -78,8 +78,8 @@ export function PaginaVendedor() {
           {/* Contenido de la pestaña VENDEDORES */}
           {activeTab === 'vendedores' && (
             <div>
-              <VendedorToolbar />
-              <VendedorTable sellers={mockSellers} />
+              <SellerToolbar />
+              <SellerTable sellers={mockSellers} />
             </div>
           )}
 

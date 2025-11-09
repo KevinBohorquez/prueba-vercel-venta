@@ -1,8 +1,8 @@
 import StatusPill from "./StatusPill";
 import TypePill from "./TypePill";
-import { type VendedorTableProps, SellerStatus } from "../types/vendedores.types";
+import { type SellerTableProps, SellerStatus } from "../types/seller.types";
 
-const VendedorTable = ({ sellers }: VendedorTableProps) => (
+const SellerTable = ({ sellers }: SellerTableProps) => (
   <div className="overflow-x-auto">
     <table className="min-w-full divide-y divide-gray-200">
       {/* Encabezados de la Tabla */}
@@ -48,4 +48,4 @@ const VendedorTable = ({ sellers }: VendedorTableProps) => (
   </div>
 );
 
-export default VendedorTable;
+export default SellerTable;
