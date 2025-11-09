@@ -5,6 +5,7 @@ import { type Vendedor, SellerType, SellerStatus } from "../types/vendedores.typ
 
 type TabId = 'vendedores' | 'sedes';
 
+// Datos simulados para los vendedores
 const mockSellers: Vendedor[] = [
   {
     id: 'V-INT-001',
@@ -42,7 +43,7 @@ export function PaginaVendedor() {
   ];
 
   return (
-    <div className="bg-gray-100 p-4 md:p-8 min-h-screen">
+    <div className="bg-gray-100 min-h-screen">
       <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-lg">
         
         {/* 1. Cabecera */}
