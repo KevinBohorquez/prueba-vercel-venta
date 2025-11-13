@@ -167,9 +167,8 @@ export function CreateSellerModal({ onClose, onSaveSuccess }: CreateModalProps) 
               <label>Tipo de Vendedor</label>
               {/* Gozu esta opción de select */}
               <select name="type" value={formData.type} onChange={handleChange} className="mt-1 block w-full border border-gray-300 rounded-md p-2">
-                <option value="">Seleccione...</option>
-                <option value="Interno">Interno (Planilla)</option>
                 <option value="Externo">Externo</option>
+                <option value="Interno">Interno (Planilla)</option>
               </select>
             </div>
 
@@ -178,9 +177,12 @@ export function CreateSellerModal({ onClose, onSaveSuccess }: CreateModalProps) 
               <label>DNI</label>
               <div className="flex items-center space-x-2">
                 <input type="text" name="dni" value={formData.dni} onChange={handleChange} placeholder="Ej: 12345678" className="mt-1 block w-full border border-gray-300 rounded-md p-2" />
-                <button type="button" onClick={handleSearchHR} disabled={isSearching} className="mt-1 px-4 py-2 bg-blue-100 text-blue-700 rounded-md whitespace-nowrap">
-                  {isSearching ? 'Buscando...' : 'Buscar en RRHH'}
-                </button>
+                {/* Agregamos condicional para agregar el botón de RRHH */}
+                { formData.type === 'Interno' && (
+                  <button type="button" onClick={handleSearchHR} disabled={isSearching} className="mt-1 px-4 py-2 bg-blue-100 text-blue-700 rounded-md whitespace-nowrap">
+                    {isSearching ? 'Buscando...' : 'Buscar en RRHH'}
+                  </button>
+                )}
               </div>
             </div>
 
