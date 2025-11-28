@@ -9,6 +9,10 @@ import com.venta.backend.vendedor.application.exceptions.RecursoNoEncontradoExce
 import com.venta.backend.vendedor.application.exceptions.RegistroVendedorException;
 import com.venta.backend.vendedor.application.fabricas.IFabricaStrategia;
 import com.venta.backend.vendedor.application.mappers.IVendedorMapeador;
+import com.venta.backend.vendedor.application.observer.EventType;
+import com.venta.backend.vendedor.application.observer.IVendedorObservable;
+import com.venta.backend.vendedor.application.observer.IVendedorObserver;
+import com.venta.backend.vendedor.application.observer.VendedorEvent;
 import com.venta.backend.vendedor.application.servicios.IVendedorAdminServicio;
 import com.venta.backend.vendedor.application.servicios.IVendedorConsultaServicio;
 import com.venta.backend.vendedor.application.specifications.VendedorEspecificacion;
@@ -27,16 +31,39 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorConsultaServicio {
+public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorConsultaServicio, IVendedorObservable {
     private final VendedorRepositorio vendedorRepositorio;
     private final SedeRepositorio sedeRepositorio;
     private final IFabricaStrategia fabricaStrategia;
     private final IVendedorMapeador vendedorMapeador;
     private final IClienteCotizacion clienteCotizacion;
+
+    private final List<IVendedorObserver> observers = new ArrayList<>();
+
+    @Override
+    public void addObserver(IVendedorObserver observer) {
+        if (!observers.contains(observer)) {
+            observers.add(observer);
+        }
+    }
+
+    @Override
+    public void removeObserver(IVendedorObserver observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers(VendedorEvent event) {
+        for (IVendedorObserver observer : observers) {
+            observer.notify(event);
+        }
+    }
 
     @Override
     @Transactional
@@ -56,6 +83,18 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
         newVendedor.assignBranch(sedeAsignada);
 
         Vendedor savedVendedor = vendedorRepositorio.save(newVendedor);
+
+        VendedorEvent event = VendedorEvent.builder()
+                .tipoEvento(EventType.CREADO)
+                .vendedorId(savedVendedor.getSellerId())
+                .vendedorNombre(savedVendedor.getFullName())
+                .sellerType(savedVendedor.getSellerType())
+                .timestamp(LocalDateTime.now())
+                .build();
+        event.addDetalle("sedeId", sedeAsignada.getBranchId());
+        event.addDetalle("sedeNombre", sedeAsignada.getName());
+
+        notifyObservers(event);
 
         return vendedorMapeador.toVendedorResponse(savedVendedor);
     }
