@@ -14,12 +14,12 @@ import com.venta.backend.vendedor.application.servicios.IVendedorConsultaServici
 import com.venta.backend.vendedor.application.specifications.VendedorEspecificacion;
 import com.venta.backend.vendedor.entities.Sede;
 import com.venta.backend.vendedor.entities.Vendedor;
+import com.venta.backend.vendedor.enums.BranchType;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.enums.SellerType;
 import com.venta.backend.vendedor.infraestructura.clientes.IClienteCotizacion;
 import com.venta.backend.vendedor.infraestructura.repository.SedeRepositorio;
 import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -50,8 +50,9 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
         }
         Sede sedeAsignada = findSedeEntityById(request.getSellerBranchId());
 
-        Vendedor newVendedor = strategia.createSellerEntity(request);
+        validateBranchCapacity(sedeAsignada);
 
+        Vendedor newVendedor = strategia.createSellerEntity(request);
         newVendedor.assignBranch(sedeAsignada);
 
         Vendedor savedVendedor = vendedorRepositorio.save(newVendedor);
@@ -71,6 +72,7 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
 
         if (newBranchId != null && !newBranchId.equals(vendedorToUpdate.getSellerBranch().getBranchId())) {
             newSede = findSedeEntityById(newBranchId);
+            validateBranchCapacity(newSede);
         }
 
         strategia.applyChanges(vendedorToUpdate, request, newSede);
@@ -98,6 +100,9 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     @Transactional
     public VendedorResponse reactivateSeller(Long sellerId) {
         Vendedor vendedor = findSellerEntityById(sellerId);
+
+        validateBranchCapacity(vendedor.getSellerBranch());
+
         vendedor.changeStatus(SellerStatus.ACTIVE);
         Vendedor reactivatedVendedor = vendedorRepositorio.save(vendedor);
         return vendedorMapeador.toVendedorResponse(reactivatedVendedor);
@@ -155,6 +160,10 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     }
 
     private void validateBranchCapacity(Sede sede) {
+        if (sede.getBranchType() == BranchType.CALL_CENTER) {
+            return;
+        }
+
         Long currentSellers = vendedorRepositorio.countActiveSellersByBranch(sede.getBranchId());
 
         if (sede.getMaxCapacity() != null && currentSellers >= sede.getMaxCapacity()) {
