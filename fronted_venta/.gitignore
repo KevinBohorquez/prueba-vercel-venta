@@ -26,3 +26,6 @@ bun.lock
 
 .env
 .env.local
+
+# Terrible
+.editorconfig

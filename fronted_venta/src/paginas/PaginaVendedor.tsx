@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import SellerToolbar from "../components/SellerToolbar";
 import SellerTable from "../components/SellerTable";
 import { type Seller, SellerType, SellerStatus } from "../types/seller.types";
+import { CreateSellerModal } from "../components/CreateSellerModal";
 
 type TabId = 'vendedores' | 'sedes';
 
@@ -33,23 +34,61 @@ const mockSellers: Seller[] = [
   },
 ];
 
+
+
 export function PaginaVendedor() {
-  // Ahora el estado está tipado con 'vendedores' o 'sedes'
+  // Empieza con la pestaña de vendedores
   const [activeTab, setActiveTab] = useState<TabId>('vendedores');
 
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // Para saber si está cargando
+  const [error, setError] = useState<Error | null>(null); // Para cualquier error
+
+  // Estado para el modal de creación
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Para las 2 navegaciones
   const tabs = [
     { id: 'vendedores', label: 'Vendedores' },
-    { id: 'sedes', label: 'Sede de Venta' },
+    { id: 'sedes', label: 'Sedes de Venta' },
   ];
+
+  const fetchSellers = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/vendedores');
+      if (!response.ok) {
+        throw new Error('Error al cargar los vendedores');
+      }
+      const data = await response.json();
+      setSellers(data);
+    } catch (error: any) {
+      setError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []); // useCallback la memoriza
+
+  useEffect(() => {
+    if (activeTab === 'vendedores') {
+      fetchSellers();
+    }
+  }, [activeTab, fetchSellers]);
+
+  const handleSaveSuccess = () => {
+    setIsCreateModalOpen(false); // Cerrar el modal
+    fetchSellers(); // Refrescar la lista de vendedores
+  }
 
   return (
     <div className="bg-gray-100 min-h-screen">
       <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        
+
         {/* 1. Cabecera */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Vendedores y Sedes</h1>
-          <p className="text-gray-600 mt-1">Waaaaa</p>
+          <h1 className="text-3xl font-bold text-gray-900">Gestión de Vendedores</h1>
+          <p className="text-gray-600 mt-1">Crear vendedores y asignarles a una sede para empezar a vender</p>
         </div>
 
         {/* 2. Pestañas (Tabs) */}
@@ -78,23 +117,48 @@ export function PaginaVendedor() {
           {/* Contenido de la pestaña VENDEDORES */}
           {activeTab === 'vendedores' && (
             <div>
-              <SellerToolbar />
-              <SellerTable sellers={mockSellers} />
+              <SellerToolbar
+                onNewSellerClick={() => {
+                  console.log("Creando nuevo vendedor")
+                  setIsCreateModalOpen(true);
+                  }
+                }
+              />
+
+              {isLoading && <p>Cargando vendedores...</p>}
+              {/* Por mientras comentamos esta parte hasta tener el endpoint listo */}
+              {/*error && <p className="text-red-500">Error: {error.message}</p>*/}
+              {/* Colocamos los vendedores de la base de datos */}
+              {!isLoading && !error && (
+                <SellerTable sellers={sellers} />
+              )}
+              {/* Simulamos vendedores por si no existe endpoint por mientras */}
+              {!isLoading && error && (
+                <SellerTable sellers={mockSellers} />
+              )}
+
             </div>
           )}
 
-          {/* Contenido de la pestaña SEDES (placeholder) */}
+          {/* Contenido de la pestaña SEDES */}
           {activeTab === 'sedes' && (
             <div className="p-4">
-              <h3 className="text-xl font-semibold">Visualizar Sedes de Venta</h3>
+              <h3 className="text-xl font-semibold">Visualizar Sedes de Venta por TODO</h3>
               <p className="text-gray-500 mt-2">
                 Waaaaaaa.).
               </p>
             </div>
           )}
         </div>
-
       </div>
+
+      {isCreateModalOpen && (
+        <CreateSellerModal
+          onClose={() => setIsCreateModalOpen(false)}
+          onSaveSuccess={handleSaveSuccess}
+        />
+      )}
+
     </div>
   );
 }

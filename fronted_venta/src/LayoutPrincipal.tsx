@@ -26,7 +26,7 @@ export function LayoutPrincipal() {
     <div className="flex h-screen bg-gray-100">
 
       {/* 1. BARRA LATERAL (SIEMPRE FIJA)  */}
-      <aside className="w-64 bg-[#3C83F6] text-white p-6 shadow-xl">
+      <aside className="w-64 bg-[#3C83F6] text-white p-6 shadow-xl flex flex-col">
         <h1 className="text-2xl font-bold mb-6 text-center">Venta</h1>
             {/* Navegación */}
         <nav>
@@ -48,10 +48,10 @@ export function LayoutPrincipal() {
           </ul>
         </nav>
 
-        <div className="mt-6">
+        <div className="mt-auto">
           <button
             onClick={logout}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded"
+            className="w-full bg-red-700 hover:bg-red-700 text-white py-2 px-3 rounded"
           >
             Cerrar sesión
           </button>
