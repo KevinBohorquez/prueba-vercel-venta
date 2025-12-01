@@ -1,18 +1,18 @@
-import { Route, Routes } from "react-router-dom"
-import { PaginaVenta } from "./paginas/PaginaVenta"
-import { PaginaCliente } from "./paginas/PaginaCliente"
-import { PaginaCotizacion } from "./paginas/PaginaCotizacion"
-import { LayoutPrincipal } from "./LayoutPrincipal"
-import { PaginaNoEncontrada } from "./paginas/PaginaNoEncontrada"
-import Login from "./components/Login"
-import { useRole } from "./contexts/RoleContext"
-import { PaginaVendedor } from "./paginas/PaginaVendedor"
-import { PaginaVentaDirecta } from "./paginas/PaginaVentaDirecta"
+import { Route, Routes } from 'react-router-dom';
+import { PaginaVenta } from './paginas/PaginaVenta';
+import { PaginaCliente } from './paginas/PaginaCliente';
+import { PaginaCotizacion } from './paginas/PaginaCotizacion';
+import { LayoutPrincipal } from './components/layout/LayoutPrincipal';
+import { PaginaNoEncontrada } from './paginas/PaginaNoEncontrada';
+import Login from './components/Login';
+import { useRole } from './contexts/RoleContext';
+import { PaginaVendedor } from './paginas/PaginaVendedor';
+import { PaginaVentaDirecta } from './paginas/PaginaVentaDirecta';
 
 function App() {
-  const { role } = useRole()
+  const { role } = useRole();
 
-  if (!role) return <Login />
+  if (!role) return <Login />;
 
   return (
     // Si agregan lo de producto y descuento como página
@@ -27,9 +27,9 @@ function App() {
         <Route path="pagina-vendedor" element={<PaginaVendedor />} />
       </Route>
 
-      <Route path="*" element={<PaginaNoEncontrada/>}></Route>
+      <Route path="*" element={<PaginaNoEncontrada />}></Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
