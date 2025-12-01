@@ -7,6 +7,7 @@ import { PaginaNoEncontrada } from "./paginas/PaginaNoEncontrada"
 import Login from "./components/Login"
 import { useRole } from "./contexts/RoleContext"
 import { PaginaVendedor } from "./paginas/PaginaVendedor"
+import { PaginaVentaDirecta } from "./paginas/PaginaVentaDirecta"
 
 function App() {
   const { role } = useRole()
@@ -20,6 +21,7 @@ function App() {
     <Routes>
       <Route path="/" element={<LayoutPrincipal />}>
         <Route index element={<PaginaVenta />} />
+        <Route path="registrar-venta" element={<PaginaVentaDirecta />} />
         <Route path="pagina-cotizacion" element={<PaginaCotizacion />} />
         <Route path="pagina-cliente" element={<PaginaCliente />} />
         <Route path="pagina-vendedor" element={<PaginaVendedor />} />
