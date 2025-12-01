@@ -61,7 +61,7 @@ export function LayoutPrincipal() {
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                         isActive
-                          ? 'bg-dark-800 text-white shadow-md'
+                          ? 'bg-primary-500 text-white shadow-md'
                           : 'text-primary-100 hover:bg-primary-500 hover:text-white'
                       }`
                     }
@@ -79,7 +79,7 @@ export function LayoutPrincipal() {
         <div className="p-4 border-t border-primary-500">
           <button
             onClick={logout}
-            className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+            className="w-full flex items-center justify-center gap-2 hover:bg-white/10 hover:text-red-100 text-white py-3 px-4 rounded-lg transition-all duration-200 font-medium shadow-md hover:shadow-lg"
           >
             <LogOutIcon size={20} />
             <span>Cerrar Sesión</span>

@@ -1,7 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import { PaginaVenta } from './paginas/PaginaVenta';
 import { PaginaCliente } from './paginas/PaginaCliente';
-import { PaginaCotizacion } from './paginas/PaginaCotizacion';
+import { PaginaCotizacion } from './modules/cotizacion/pages/PaginaCotizacion';
 import { LayoutPrincipal } from './components/layout/LayoutPrincipal';
 import { PaginaNoEncontrada } from './paginas/PaginaNoEncontrada';
 import Login from './components/Login';
