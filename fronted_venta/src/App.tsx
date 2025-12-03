@@ -8,6 +8,7 @@ import Login from "./components/Login"
 import { useRole } from "./contexts/RoleContext"
 import { PaginaVendedor } from "./paginas/PaginaVendedor"
 import { PaginaVentaDirecta } from "./paginas/PaginaVentaDirecta"
+import { PaginaVentaLead } from "./paginas/PaginaVentaLead"
 
 function App() {
   const { role } = useRole()
@@ -22,6 +23,7 @@ function App() {
       <Route path="/" element={<LayoutPrincipal />}>
         <Route index element={<PaginaVenta />} />
         <Route path="registrar-venta" element={<PaginaVentaDirecta />} />
+        <Route path="registrar-venta-lead" element={<PaginaVentaLead />} />
         <Route path="pagina-cotizacion" element={<PaginaCotizacion />} />
         <Route path="pagina-cliente" element={<PaginaCliente />} />
         <Route path="pagina-vendedor" element={<PaginaVendedor />} />
