@@ -1,8 +1,8 @@
 import { Route, Routes } from "react-router-dom"
 import { PaginaVenta } from "./paginas/PaginaVenta"
 import { PaginaCliente } from "./paginas/PaginaCliente"
-import { PaginaCotizacion } from "./paginas/PaginaCotizacion"
-import { LayoutPrincipal } from "./LayoutPrincipal"
+import { PaginaCotizacion } from './modules/cotizacion/pages/PaginaCotizacion';
+import { LayoutPrincipal } from './components/layout/LayoutPrincipal';
 import { PaginaNoEncontrada } from "./paginas/PaginaNoEncontrada"
 import Login from "./components/Login"
 import { useRole } from "./contexts/RoleContext"
@@ -11,9 +11,9 @@ import { PaginaVentaDirecta } from "./paginas/PaginaVentaDirecta"
 import { PaginaVentaLead } from "./paginas/PaginaVentaLead"
 
 function App() {
-  const { role } = useRole()
+  const { role } = useRole();
 
-  if (!role) return <Login />
+  if (!role) return <Login />;
 
   return (
     // Si agregan lo de producto y descuento como página
@@ -29,9 +29,9 @@ function App() {
         <Route path="pagina-vendedor" element={<PaginaVendedor />} />
       </Route>
 
-      <Route path="*" element={<PaginaNoEncontrada/>}></Route>
+      <Route path="*" element={<PaginaNoEncontrada />}></Route>
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
