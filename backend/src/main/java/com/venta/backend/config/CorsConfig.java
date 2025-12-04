@@ -14,22 +14,10 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        // Permite tus frontends de Vercel
-        config.addAllowedOrigin("https://prueba-vercel-venta-9ubr.vercel.app"); // vercel privadito de rhamses
-        config.addAllowedOrigin("https://mod-ventas.vercel.app");
-
-        // Para desarrollo local también (opcional)
-        config.addAllowedOrigin("http://localhost:5173");
-        config.addAllowedOrigin("http://localhost:3000");
-
-        // Permite todos los métodos HTTP
-        config.addAllowedMethod("*");
-
-        // Permite todos los headers
-        config.addAllowedHeader("*");
-
-        // Permite credenciales (cookies, auth headers)
-        config.setAllowCredentials(true);
+        config.addAllowedOriginPattern("*"); // permite todos los orígenes (!)
+        config.addAllowedMethod("*");        // permite todos los métodos
+        config.addAllowedHeader("*");        // permite todos los headers
+        config.setAllowCredentials(false);   // DEBE ser false si usas "*"
 
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
