@@ -5,6 +5,7 @@ import { SellerType, SellerStatus } from '../types/seller.types';
 import type { VendedorResponse, SedeResponse } from '../types/Vendedor';
 import { CreateSellerModal } from '../components/CreateSellerModal';
 import SedeTable from '../components/SedeTable';
+import SellerPagination from '../components/SellerPagination';
 
 type TabId = 'vendedores' | 'sedes';
 
@@ -16,7 +17,9 @@ interface PageResponse {
     content: VendedorResponse[];
     totalPages: number;
     totalElements: number;
-    // ... otros campos de paginación
+    number: number; // Índice de la página actual (Ej: 0 o 1)
+    size: number; // Tamaño de la página (Ej: 20)
+    // Otros campos: first, last, empty...
 }
 
 interface FilterState {
@@ -40,6 +43,10 @@ export function PaginaVendedor() {
   const [sedes, setSedes] = useState<SedeResponse[]>([]);
   const [isSedesLoading, setIsSedesLoading] = useState(false);
   const [sedesError, setSedesError] = useState<Error | null>(null);
+
+  // estados para paginación
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
   const [filters, setFilters] = useState<FilterState>({
       sellerType: '',
@@ -100,6 +107,9 @@ export function PaginaVendedor() {
         const data: PageResponse = await response.json();
         setSellers(data.content);
 
+        setTotalPages(data.totalPages);
+        setTotalElements(data.totalElements);
+
     } catch (error: unknown) {
         setError(error as Error);
         setSellers([]);
@@ -107,6 +117,16 @@ export function PaginaVendedor() {
         setIsLoading(false);
     }
   }, [filters]);
+
+  const handlePageChange = (newPage: number) => {
+    // Solo permitimos el cambio si la nueva página es válida
+    if (newPage >= 0 && newPage < totalPages) {
+        setFilters(prev => ({
+            ...prev,
+            page: newPage, // Al cambiar 'filters.page', se dispara fetchSellers
+        }));
+    }
+  };
 
   // para obtener las sedes
   const fetchSedes = useCallback(async () => {
@@ -266,11 +286,24 @@ export function PaginaVendedor() {
               )}
              
               {/* Solo mostramos la tabla si no está cargando y no hay error */}
-              {!isLoading && !error && <SellerTable
-                                          sellers={mappedSellers}
-                                          onDeactivate={(id) => handleDeactivateSeller(id)}
-                                          onActivate={(id) => handleActivateSeller(id)}
-                                        />}
+              {!isLoading && !error && (
+                  <>
+                    <SellerTable
+                        sellers={mappedSellers}
+                        onDeactivate={(id) => handleDeactivateSeller(id)}
+                        onActivate={(id) => handleActivateSeller(id)}
+                    />
+
+                    <div className='mt-4'>
+                        <SellerPagination
+                            currentPage={filters.page}
+                            totalPages={totalPages}
+                            totalElements={totalElements}
+                            onPageChange={handlePageChange}
+                        />
+                      </div>
+                  </>
+              )}
             </div>
           )}
 
