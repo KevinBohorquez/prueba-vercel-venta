@@ -360,17 +360,17 @@ export function PaginaVendedor() {
                 )}
             </div>
           )}
-        </div>
-      </div>
+        </div>
+      </div>
 
-      {isCreateModalOpen && (
-        <CreateSellerModal
-          onClose={() => handleCloseModal}
-          onSaveSuccess={handleSaveSuccess}
+      {isCreateModalOpen && (
+        <CreateSellerModal
+          onClose={handleCloseModal}
+          onSaveSuccess={handleSaveSuccess}
           apiBaseUrl={API_BASE_URL}
           sellerDataToEdit={sellerToEdit}
-        />
-      )}
-    </div>
-  );
+        />
+      )}
+    </div>
+  );
 }
