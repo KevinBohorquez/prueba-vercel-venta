@@ -76,9 +76,9 @@ export function PaginaVentaDirecta() {
   const [isCatalogOpen, setIsCatalogOpen] = useState(false); // <--- NUEVO ESTADO PARA EL CATÁLOGO
 
   const [productos, setProductos] = useState<ProductoVenta[]>([]);
-  const [setSubtotalApi] = useState(0);
+  //const [setSubtotalApi] = useState(0);
   const [descuentoApi, setDescuentoApi] = useState(0);
-  const [setTotalApi] = useState(0);
+  //const [setTotalApi] = useState(0);
 
   // Estado para cliente
   const [clienteSeleccionado, setClienteSeleccionado] = useState<{
