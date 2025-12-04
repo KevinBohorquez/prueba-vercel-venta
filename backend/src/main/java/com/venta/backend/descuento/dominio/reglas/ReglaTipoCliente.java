@@ -1,8 +1,13 @@
 package com.venta.backend.descuento.dominio.reglas;
 
+import com.venta.backend.cliente.entities.Cliente;
+import com.venta.backend.descuento.DTO.DescuentoAplicadoResponse;
 import com.venta.backend.descuento.dominio.estrategias.IDescuentoStrategy;
 // ... otras importaciones
+import com.venta.backend.venta.entities.Venta;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
 
 @Component
 public class ReglaTipoCliente implements IReglaDescuento {
