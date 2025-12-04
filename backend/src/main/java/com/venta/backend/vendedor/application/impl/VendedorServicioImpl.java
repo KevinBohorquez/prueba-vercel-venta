@@ -115,6 +115,12 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     @Transactional(readOnly = true)
     public VendedorResponse findSellerById(Long sellerId) {
         Vendedor vendedor = findSellerEntityById(sellerId);
+
+        if (vendedor.getSellerStatus() == SellerStatus.INACTIVE) {
+            throw new RegistroVendedorException("El vendedor con ID " + sellerId
+                    + "se encuentra inactivo y no puede realizar ventas");
+        }
+
         return vendedorMapeador.toVendedorResponse(vendedor);
     }
 
