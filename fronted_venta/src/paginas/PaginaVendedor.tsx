@@ -49,7 +49,7 @@ export function PaginaVendedor() {
       page: 0,
   });
 
-  const handleFilterChange = (name: keyof FilterState, value: string | number) => {
+  const handleFilterChange = (name: string, value: string | number) => {
     setFilters(prev => ({
         ...prev,
         [name]: value,
