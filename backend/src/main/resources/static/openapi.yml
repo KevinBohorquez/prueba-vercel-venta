@@ -24,12 +24,12 @@ tags:
     description: Gestión de descuentos
 
 paths:
-  /api/ventas:
+  /api/venta:
     get:
       tags:
         - Ventas
       summary: Listar todas las ventas
-      description: Obtiene un listado de todas las ventas registradas
+      description: Obtiene un listado de todas las ventas registradas en el sistema
       operationId: listarVentas
       responses:
         '200':
@@ -39,30 +39,94 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Venta'
+                  $ref: '#/components/schemas/VentaListadoResponse'
         '500':
           description: Error interno del servidor
+
+  /api/venta/directa/borrador:
     post:
       tags:
         - Ventas
-      summary: Crear una nueva venta
-      description: Registra una nueva venta en el sistema
-      operationId: crearVenta
+      summary: Crear una venta directa en borrador
+      description: Crea una nueva venta directa en estado borrador con código generado automáticamente (VTA-DIR-XXXXXX)
+      operationId: crearVentaDirectaBorrador
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VentaRequest'
+              $ref: '#/components/schemas/CrearVentaDirectaRequest'
       responses:
         '201':
-          description: Venta creada exitosamente
+          description: Venta directa borrador creada exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Venta'
+                $ref: '#/components/schemas/VentaResumenResponse'
         '400':
           description: Datos de entrada inválidos
+        '500':
+          description: Error interno del servidor
+
+  /api/venta/{ventaId}/carrito:
+    get:
+      tags:
+        - Ventas
+      summary: Obtener resumen del carrito de venta
+      description: Obtiene el resumen completo de una venta incluyendo sus items, subtotales y totales
+      operationId: obtenerResumen
+      parameters:
+        - name: ventaId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID de la venta
+      responses:
+        '200':
+          description: Resumen de la venta obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VentaResumenResponse'
+        '404':
+          description: Venta no encontrada
+        '500':
+          description: Error interno del servidor
+
+  /api/venta/{ventaId}/carrito/items:
+    post:
+      tags:
+        - Ventas
+      summary: Agregar item al carrito de venta
+      description: Agrega un producto al carrito de una venta. Si el producto ya existe, incrementa la cantidad. Recalcula automáticamente los totales.
+      operationId: agregarItem
+      parameters:
+        - name: ventaId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID de la venta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgregarItemVentaRequest'
+      responses:
+        '200':
+          description: Item agregado exitosamente al carrito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VentaResumenResponse'
+        '400':
+          description: Datos de entrada inválidos o venta no está en borrador
+        '404':
+          description: Venta o producto no encontrado
         '500':
           description: Error interno del servidor
 
@@ -570,92 +634,136 @@ components:
         last:
           type: boolean
           description: Indica si es la última página
-    Venta:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-          example: 1
-        fecha:
-          type: string
-          format: date-time
-          example: "2025-12-01T10:30:00"
-        clienteId:
-          type: integer
-          format: int64
-          example: 100
-        vendedorId:
-          type: integer
-          format: int64
-          example: 5
-        total:
-          type: number
-          format: double
-          example: 1500.50
-        estado:
-          type: string
-          enum: [PENDIENTE, COMPLETADA, CANCELADA]
-          example: COMPLETADA
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/VentaItem'
-    
-    VentaRequest:
+    # ENUMS DE VENTA
+    OrigenVentaEnum:
+      type: string
+      enum: [DIRECTA, LEAD, COTIZACION]
+      description: Origen de la venta
+    VentaEstadoEnum:
+      type: string
+      enum: [BORRADOR, CONFIRMADA, CANCELADA]
+      description: Estado de la venta
+
+    # REQUEST DTOs
+    CrearVentaDirectaRequest:
       type: object
       required:
-        - clienteId
-        - vendedorId
-        - items
+        - usuarioCreador
       properties:
-        clienteId:
-          type: integer
-          format: int64
-        vendedorId:
-          type: integer
-          format: int64
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/VentaItemRequest'
-        descuentoId:
-          type: integer
-          format: int64
-    
-    VentaItem:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        productoId:
-          type: integer
-          format: int64
-        cantidad:
-          type: integer
-          example: 2
-        precioUnitario:
-          type: number
-          format: double
-          example: 750.25
-        subtotal:
-          type: number
-          format: double
-          example: 1500.50
-    
-    VentaItemRequest:
+        usuarioCreador:
+          type: string
+          description: Usuario que crea la venta
+          example: "admin@empresa.com"
+
+    AgregarItemVentaRequest:
       type: object
       required:
-        - productoId
+        - itemProductoId
         - cantidad
       properties:
-        productoId:
+        itemProductoId:
           type: integer
           format: int64
+          description: ID del producto a agregar
+          example: 1
         cantidad:
           type: integer
           minimum: 1
+          description: Cantidad del producto a agregar
+          example: 2
+
+    # RESPONSE DTOs
+    VentaListadoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID de la venta
+          example: 1
+        numVenta:
+          type: string
+          description: Número de venta generado (ej: VTA-DIR-000001)
+          example: "VTA-DIR-000001"
+        origenVenta:
+          $ref: '#/components/schemas/OrigenVentaEnum'
+        estado:
+          $ref: '#/components/schemas/VentaEstadoEnum'
+        fechaVentaCreada:
+          type: string
+          format: date
+          description: Fecha de creación de la venta
+          example: "2025-12-03"
+        nombreCliente:
+          type: string
+          nullable: true
+          description: Nombre del cliente (null si no está asignado)
+          example: "Juan Pérez"
+
+    VentaResumenResponse:
+      type: object
+      properties:
+        ventaId:
+          type: integer
+          format: int64
+          description: ID de la venta
+          example: 1
+        origen:
+          $ref: '#/components/schemas/OrigenVentaEnum'
+        estado:
+          $ref: '#/components/schemas/VentaEstadoEnum'
+        subtotal:
+          type: number
+          format: decimal
+          description: Subtotal de la venta (suma de items sin descuentos)
+          example: 1500.00
+        descuentoTotal:
+          type: number
+          format: decimal
+          description: Total de descuentos aplicados
+          example: 0.00
+        total:
+          type: number
+          format: decimal
+          description: Total final de la venta
+          example: 1500.00
+        items:
+          type: array
+          description: Lista de items en el carrito
+          items:
+            $ref: '#/components/schemas/LineaCarritoResponse'
+
+    LineaCarritoResponse:
+      type: object
+      properties:
+        detalleId:
+          type: integer
+          format: int64
+          description: ID del detalle de venta
+          example: 1
+        itemProductoId:
+          type: integer
+          format: int64
+          description: ID del producto
+          example: 5
+        nombreProducto:
+          type: string
+          description: Nombre del producto
+          example: "Internet 100 Mbps"
+        cantidad:
+          type: integer
+          description: Cantidad del producto
+          example: 2
+        precioUnitario:
+          type: number
+          format: decimal
+          description: Precio unitario del producto
+          example: 750.00
+        subtotal:
+          type: number
+          format: decimal
+          description: Subtotal de la línea (precioUnitario * cantidad - descuentos)
+          example: 1500.00
     
     Cotizacion:
       type: object
