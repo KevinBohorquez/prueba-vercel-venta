@@ -106,8 +106,8 @@ export function PaginaVendedor() {
     try {
       // Usaremos un endpoint PATCH/PUT para cambiar el estado a ACTIVO
       // Asume que el backend tiene el endpoint: PATCH /api/vendedores/{id}/activate
-      const response = await fetch(`${API_BASE_URL}/vendedores/${sellerId}/activate`, {
-        method: 'PATCH', // Usamos PATCH para actualizar parcialmente el estado
+      const response = await fetch(`${API_BASE_URL}/vendedores/${sellerId}/reactivar`, {
+        method: 'POST',
       });
 
       if (response.ok) { // Verifica si el código es 2xx (e.g., 200 OK)
@@ -197,6 +197,7 @@ export function PaginaVendedor() {
               {!isLoading && !error && <SellerTable
                                           sellers={mappedSellers}
                                           onDeactivate={(id) => handleDeactivateSeller(id)}
+                                          onActivate={(id) => handleActivateSeller(id)}
                                         />}
             </div>
           )}

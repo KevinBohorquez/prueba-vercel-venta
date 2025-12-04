@@ -29,3 +29,15 @@ export type SellerStatus = 'ACTIVE' | 'INACTIVE';
 export interface ErrorResponse {
     message: string;
 }
+
+export type BranchType = 'MODULE' | 'AUTHORIZED_DEALER' | 'CALL_CENTER' | 'CENTRO_DE_ATENCION';
+
+export interface SedeResponse {
+    branchId: number;
+    name: string;
+    address: string;
+    branchType: BranchType;
+    maxCapacity: number | null;
+    active: boolean; // true o false
+    warehouseRefId: number | null; // Referencia a Inventario
+}

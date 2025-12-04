@@ -2,7 +2,7 @@ import StatusPill from "./StatusPill";
 import TypePill from "./TypePill";
 import { type SellerTableProps, SellerStatus } from "../types/seller.types";
 
-const SellerTable = ({ sellers, onDeactivate }: SellerTableProps) => (
+const SellerTable = ({ sellers, onDeactivate, onActivate }: SellerTableProps) => (
   <div className="overflow-x-auto">
     <table className="min-w-full divide-y divide-gray-200">
       {/* Encabezados de la Tabla */}
@@ -46,7 +46,15 @@ const SellerTable = ({ sellers, onDeactivate }: SellerTableProps) => (
                   Desactivar
                 </button>
               ) : (
-                <a href="#" className="text-green-600 hover:text-green-800">Reactivar</a>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onActivate(Number(seller.id));
+                  }}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  Reactivar
+            </button>
               )}
             </td>
           </tr>
