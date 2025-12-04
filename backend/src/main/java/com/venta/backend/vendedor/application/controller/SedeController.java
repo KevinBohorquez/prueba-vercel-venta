@@ -35,7 +35,7 @@ public class SedeController {
      */
     @GetMapping("/activas")
     public ResponseEntity<List<Sede>> listActiveBranches() {
-        List<Sede> sedes = sedeRepositorio.findByActivo(true);
+        List<Sede> sedes = sedeRepositorio.findByActive(true);
         return ResponseEntity.ok(sedes);
     }
 

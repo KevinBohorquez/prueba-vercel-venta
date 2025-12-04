@@ -2,9 +2,6 @@ package com.venta.backend.vendedor.application.controller;
 
 import com.venta.backend.vendedor.application.exceptions.RecursoNoEncontradoException;
 import com.venta.backend.vendedor.application.exceptions.RegistroVendedorException;
-import com.venta.backend.venta.application.exceptions.ItemProductoNoEncontradoException;
-import com.venta.backend.venta.application.exceptions.VentaNoEncontradaException;
-import com.venta.backend.venta.application.exceptions.VentaOperacionNoPermitidaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -21,12 +18,8 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({
-            RecursoNoEncontradoException.class,
-            VentaNoEncontradaException.class,
-            ItemProductoNoEncontradoException.class
-    })
-    public ResponseEntity<Map<String, Object>> handleNotFound(RuntimeException ex) {
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<Map<String, Object>> handleRecursoNoEncontrado(RecursoNoEncontradoException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.NOT_FOUND.value());
@@ -36,12 +29,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
-    @ExceptionHandler({
-            RegistroVendedorException.class,
-            VentaOperacionNoPermitidaException.class,
-            IllegalArgumentException.class
-    })
-    public ResponseEntity<Map<String, Object>> handleBadRequest(RuntimeException ex) {
+    @ExceptionHandler(RegistroVendedorException.class)
+    public ResponseEntity<Map<String, Object>> handleRegistroVendedor(RegistroVendedorException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());

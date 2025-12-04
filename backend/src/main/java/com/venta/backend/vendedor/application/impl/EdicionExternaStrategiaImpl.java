@@ -14,16 +14,16 @@ public class EdicionExternaStrategiaImpl implements IEdicionVendedorStrategia {
 
         // Si el DTO trae un nuevo valor, lo actualiza. Si no (es null), deja el que ya tenía.
         if (request.getLastName() != null) {
-            sellerToUpdate.setApellido(request.getLastName());
+            sellerToUpdate.setLastName(request.getLastName());
         }
         if (request.getEmail() != null) {
             sellerToUpdate.setEmail(request.getEmail());
         }
         if (request.getPhoneNumber() != null) {
-            sellerToUpdate.setNumeroTelefono(request.getPhoneNumber());
+            sellerToUpdate.setPhoneNumber(request.getPhoneNumber());
         }
         if (request.getAddress() != null) {
-            sellerToUpdate.setDireccion(request.getAddress());
+            sellerToUpdate.setAddress(request.getAddress());
         }
 
         if (request.getBankAccount() != null) {
@@ -35,11 +35,11 @@ public class EdicionExternaStrategiaImpl implements IEdicionVendedorStrategia {
         }
 
         if (newBranch != null) {
-            sellerToUpdate.asignarSede(newBranch);
+            sellerToUpdate.assignBranch(newBranch);
         }
 
         if (request.getSellerStatus() != null) {
-            sellerToUpdate.cambiarEstado(request.getSellerStatus());
+            sellerToUpdate.changeStatus(request.getSellerStatus());
         }
     }
 }

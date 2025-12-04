@@ -68,12 +68,12 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     public VendedorResponse updateSeller(Long sellerId, ModificacionVendedorRequest request) {
         Vendedor vendedorToUpdate = findSellerEntityById(sellerId);
 
-        IEdicionVendedorStrategia strategia = fabricaStrategia.getEditionStrategy(vendedorToUpdate.getTipoVendedor());
+        IEdicionVendedorStrategia strategia = fabricaStrategia.getEditionStrategy(vendedorToUpdate.getSellerType());
 
         Sede newSede = null;
         Long newBranchId = request.getSellerBranchId();
 
-        if (newBranchId != null && !newBranchId.equals(vendedorToUpdate.getSede().getIdSede())) {
+        if (newBranchId != null && !newBranchId.equals(vendedorToUpdate.getSellerBranch().getBranchId())) {
             newSede = findSedeEntityById(newBranchId);
             validateBranchCapacity(newSede);
         }
@@ -94,7 +94,7 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
             throw new RegistroVendedorException("Acción bloqueada: El vendedor tiene cotizaciones pendientes.");
         }
 
-        vendedor.cambiarEstado(SellerStatus.INACTIVE);
+        vendedor.changeStatus(SellerStatus.INACTIVE);
 
         vendedorRepositorio.save(vendedor);
     }

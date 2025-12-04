@@ -33,20 +33,20 @@ public class VendedorEspecificacion {
 
             // Filtrar por Tipo
             if (sellerType != null) {
-                predicates.add(cb.equal(root.get("tipoVendedor"), sellerType));
+                predicates.add(cb.equal(root.get("sellerType"), sellerType));
             }
 
             // Filtrar por Estado
             if (sellerStatus != null) {
-                predicates.add(cb.equal(root.get("estadoVendedor"), sellerStatus));
+                predicates.add(cb.equal(root.get("sellerStatus"), sellerStatus));
             }
 
             // Filtrar por Sede
             if (sellerBranchId != null) {
-                // Hacemos un JOIN con la tabla Sede (sede)
-                Join<Vendedor, Sede> branchJoin = root.join("sede");
+                // Hacemos un JOIN con la tabla Sede (sellerBranch)
+                Join<Vendedor, Sede> branchJoin = root.join("sellerBranch");
                 // Comparamos el ID de la sede
-                predicates.add(cb.equal(branchJoin.get("idSede"), sellerBranchId));
+                predicates.add(cb.equal(branchJoin.get("branchId"), sellerBranchId));
             }
 
             // Búsqueda por DNI

@@ -48,8 +48,8 @@ public class RegistroExternoStrategiaImpl implements IRegistroVendedorStrategia 
     public Vendedor createSellerEntity(RegistroVendedorRequest request) {
         return Vendedor.builder()
                 .dni(request.getDni())
-                .primerNombre(request.getFirstName())
-                .apellido(request.getLastName())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
                 .address(request.getAddress())

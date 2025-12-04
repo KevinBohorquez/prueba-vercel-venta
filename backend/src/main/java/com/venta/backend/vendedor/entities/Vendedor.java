@@ -17,42 +17,40 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "Vendedor")
+@Table(name = "vendedores")
 public class Vendedor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_vendedor")
-    private Long idVendedor;
+    private Long sellerId;
 
-    @Column(name = "dni", nullable = false, unique = true, length = 8)
+    @Column(nullable = false, unique = true, length = 8)
     private String dni;
 
-    @Column(name = "primer_nombre", nullable = false)
-    private String primerNombre;
+    @Column(nullable = false)
+    private String firstName;
 
-    @Column(name = "apellido", nullable = false)
-    private String apellido;
+    @Column(nullable = false)
+    private String lastName;
 
-    @Column(name = "email", unique = true)
+    @Column(unique = true)
     private String email;
 
-    @Column(name = "numero_telefono", length = 15)
-    private String numeroTelefono;
+    @Column(length = 15) // Buena práctica poner longitud
+    private String phoneNumber;
 
-    @Column(name = "direccion")
-    private String direccion;
+    private String address;
 
-    @Column(name = "fecha_registro", nullable = false, updatable = false)
-    private LocalDate fechaRegistro;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_vendedor", nullable = false)
-    private SellerType tipoVendedor;
+    @Column(nullable = false, updatable = false) // Se asigna al crear y no se actualiza
+    private LocalDate registrationDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado_vendedor", nullable = false)
-    private SellerStatus estadoVendedor;
+    @Column(nullable = false)
+    private SellerType sellerType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SellerStatus sellerStatus;
 
 
     @Column(name = "employee_rrhh_id")
@@ -81,37 +79,37 @@ public class Vendedor {
     * */
     @ManyToOne(fetch = FetchType.LAZY) // Relación: Muchos Vendedores van a una Sede
     @JoinColumn(name = "id_sede", nullable = false)
-    private Sede sede;
+    private Sede sellerBranch;
 
     /**
      * Comprueba si el vendedor está activo.
      * @return true si el estado es ACTIVE, false de lo contrario.
      */
     public boolean isActive() {
-        return this.estadoVendedor == SellerStatus.ACTIVE;
+        return this.sellerStatus == SellerStatus.ACTIVE;
     }
 
     /**
      * Cambia el estado del vendedor (para baja lógica o reactivación).
-     * @param nuevoEstado El nuevo estado (ACTIVE o INACTIVE).
+     * @param newStatus El nuevo estado (ACTIVE o INACTIVE).
      */
-    public void cambiarEstado(SellerStatus nuevoEstado) {
-        this.estadoVendedor = nuevoEstado;
+    public void changeStatus(SellerStatus newStatus) {
+        this.sellerStatus = newStatus;
     }
 
     /**
      * Asigna o reasigna al vendedor a una nueva sede.
-     * @param nuevaSede La nueva entidad Sede.
+     * @param newBranch La nueva entidad Sede.
      */
-    public void asignarSede(Sede nuevaSede) {
-        this.sede = nuevaSede;
+    public void assignBranch(Sede newBranch) {
+        this.sellerBranch = newBranch;
     }
 
     /**
      * Devuelve el nombre completo del vendedor.
-     * @return String con "primerNombre apellido".
+     * @return String con "firstName lastName".
      */
-    public String getNombreCompleto() {
-        return this.primerNombre + " " + this.apellido;
+    public String getFullName() {
+        return this.firstName + " " + this.lastName;
     }
 }
