@@ -2,9 +2,9 @@ spring:
   application:
     name: backend
   datasource:
-    url: ${DB_URL:jdbc:mysql://db-erp.mysql.database.azure.com/db_ventas}
-    username: ${DB_USER:ventas_user}
-    password: ${DB_PASS}
+    url: jdbc:mysql://localhost:3306/diseño_venta?useSSL=false&serverTimezone=UTC
+    username: root
+    password: root
   jpa:
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
