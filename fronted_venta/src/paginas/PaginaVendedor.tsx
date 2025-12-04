@@ -112,6 +112,8 @@ export function PaginaVendedor() {
           </nav>
         </div>
 
+
+
         {/* 3. Contenido Principal (basado en la pestaña activa) */}
         <div>
           {/* Contenido de la pestaña VENDEDORES */}
