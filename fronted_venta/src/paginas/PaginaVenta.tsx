@@ -4,7 +4,7 @@ import { PendingLeadSalesModal } from '../components/PendingLeadSalesModal';
 
 // --- Tipos para Ventas ---
 type EstadoVenta = 'Aprobada' | 'Cancelada' | 'En Borrador';
-
+const API_URL = import.meta.env.VITE_API_URL;
 interface VentaListadoApi {
   id: number;
   numVenta: string | null;
