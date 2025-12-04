@@ -42,6 +42,18 @@ const initialState: SellerFormData = {
   documentType: 'DNI',
 };
 
+interface RrhhData {
+    nombres: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
+    email: string;
+    telefono: string;
+    direccion: string;
+    idEmpleado: number;
+    documentoIdentidad: string;
+    // Agrega aquí cualquier otro campo que el RRHH DTO envíe que necesites
+  }
+
 // 3. Interfaz de Props del Modal
 interface CreateModalProps {
   onClose: () => void;
@@ -175,7 +187,49 @@ export function CreateSellerModal({ onClose, onSaveSuccess, apiBaseUrl, sellerDa
   };
 
   const handleSearchHR = async () => {
-    alert(`Buscando empleado con DNI: ${formData.dni}. Esta lógica autocompletará el formulario.`);
+    if (!formData.dni) {
+        setError('Ingrese el DNI para buscar en RRHH.');
+        return;
+    }
+
+    setIsSaving(true); // Reutilizamos el estado de guardado para indicar la carga
+    setError(null);
+
+    try {
+        // Llamada al nuevo endpoint Proxy de tu backend
+        const response = await fetch(`${apiBaseUrl}/vendedores/rrhh-employee/${formData.dni}`);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error al buscar empleado en RRHH.');
+        }
+
+        const data: RrhhData = await response.json();
+
+        // AUTOCOMPLETADO DE CAMPOS
+        setFormData((prev) => ({
+            ...prev,
+            dni: data.documentoIdentidad,
+            firstName: data.nombres,
+            lastName: `${data.apellidoPaterno} ${data.apellidoMaterno}`, // Concatenamos para el formulario
+            email: data.email,
+            phoneNumber: data.telefono,
+            address: data.direccion,
+            // CLAVE: Almacenamos el ID de RRHH en el campo de referencia (employee_rrhh_id)
+            // Aunque este campo no existe en SellerFormData, lo enviamos en el request final.
+            // Para ser limpios, deberías crear un campo temporal para este ID.
+            // Por ahora, usaremos un truco en el submit, pero la DTO de Java lo tiene como employeeRrhhId
+            // Como el campo en el DTO de Vendedor es employeeRrhhId (Long), actualizaremos el form data.
+            employeeRrhhId: data.idEmpleado,
+        }));
+
+        alert(`Empleado ${data.nombres} encontrado. Datos rellenados.`);
+
+    } catch (err: any) {
+        setError(err.message);
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   // 6. SUBMIT (POST para Crear, PUT para Editar)

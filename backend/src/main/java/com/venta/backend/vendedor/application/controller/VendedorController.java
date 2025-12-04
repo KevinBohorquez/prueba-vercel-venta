@@ -129,7 +129,7 @@ public class VendedorController {
      * GET /api/vendedores/rrhh-employee/{dni}
      * Busca los datos de un empleado en RRHH para autocompletar el formulario.
      */
-    @GetMapping("/rrhh-employee/{dni}") // <-- NUEVO ENDPOINT
+    @GetMapping("/rrhh-employee/{dni}")
     public ResponseEntity<EmpleadoRRHHDTO> getRrhhEmployeeData(@PathVariable String dni) {
         EmpleadoRRHHDTO response = consultaServicio.fetchRrhhEmployee(dni);
         return ResponseEntity.ok(response);

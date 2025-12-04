@@ -45,7 +45,7 @@ public class ClienteRRHHImpl implements IClienteRRHH {
         if (dni.equals("12345678")) {
             EmpleadoRRHHDTO empleado = new EmpleadoRRHHDTO();
 
-            // 🚨 USANDO LOS NUEVOS NOMBRES DE CAMPOS
+            // USANDO LOS NUEVOS NOMBRES DE CAMPOS
             empleado.setIdEmpleado(1001L); // Clave foránea numérica en vendedor
             empleado.setDocumentoIdentidad("12345678");
             empleado.setNombres("Juan");
@@ -61,7 +61,7 @@ public class ClienteRRHHImpl implements IClienteRRHH {
         if (dni.equals("87654321")) {
             EmpleadoRRHHDTO empleado = new EmpleadoRRHHDTO();
 
-            // 🚨 SEGUNDO EJEMPLO
+            // SEGUNDO EJEMPLO
             empleado.setIdEmpleado(1002L); // Clave foránea numérica en vendedor
             empleado.setDocumentoIdentidad("87654321");
             empleado.setNombres("María");
