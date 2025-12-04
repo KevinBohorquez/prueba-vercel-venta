@@ -22,6 +22,8 @@ export interface Seller {
 
 export interface SellerTableProps {
   sellers: Seller[];
+  onDeactivate: (id: number) => void;
+  onActivate: (id: number) => void;
 }
 
 export interface TypePillProps {

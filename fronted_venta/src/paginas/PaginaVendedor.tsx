@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import SellerToolbar from '../components/SellerToolbar';
 import SellerTable from '../components/SellerTable';
 import { SellerType, SellerStatus } from '../types/seller.types';
-import type { VendedorResponse } from '../types/Vendedor';
+import type { VendedorResponse, SedeResponse } from '../types/Vendedor';
 import { CreateSellerModal } from '../components/CreateSellerModal';
+import SedeTable from '../components/SedeTable';
 
 type TabId = 'vendedores' | 'sedes';
 
@@ -18,6 +19,14 @@ interface PageResponse {
     // ... otros campos de paginación
 }
 
+interface FilterState {
+    sellerType: string;
+    sellerStatus: string;
+    sellerBranchId: string; // Usaremos string para el input y convertiremos a number/null si es necesario
+    dni: string;
+    page: number;
+}
+
 export function PaginaVendedor() {
   // Empieza con la pestaña de vendedores
   const [activeTab, setActiveTab] = useState<TabId>('vendedores');
@@ -26,6 +35,27 @@ export function PaginaVendedor() {
   const [sellers, setSellers] = useState<VendedorResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  // [ESTADOS PARA SEDES]
+  const [sedes, setSedes] = useState<SedeResponse[]>([]);
+  const [isSedesLoading, setIsSedesLoading] = useState(false);
+  const [sedesError, setSedesError] = useState<Error | null>(null);
+
+  const [filters, setFilters] = useState<FilterState>({
+      sellerType: '',
+      sellerStatus: 'ACTIVE', // Podríamos dejar solo activos por defecto
+      sellerBranchId: '',
+      dni: '',
+      page: 0,
+  });
+
+  const handleFilterChange = (name: string, value: string | number) => {
+    setFilters(prev => ({
+        ...prev,
+        [name]: value,
+        page: 0, // Siempre reseteamos la paginación al cambiar un filtro
+    }));
+};
 
   const mappedSellers = sellers.map(vendedor => ({
     id: vendedor.sellerId.toString(),
@@ -49,24 +79,125 @@ export function PaginaVendedor() {
     setIsLoading(true);
     setError(null);
     try {
-        // Usamos la URL base y el endpoint de paginación
-      const response = await fetch(`${API_BASE_URL}/vendedores?page=0&size=20`);
+        // CONSTRUCCIÓN DINÁMICA DE LA URL
+        const params = new URLSearchParams();
+        params.append('page', filters.page.toString());
+        params.append('size', '20'); // Tamaño fijo
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: No se pudo cargar la lista de vendedores`);
-      }
-        // 4. Mapear la respuesta de paginación (Page<T>)
-      const data: PageResponse = await response.json();
-      setSellers(data.content); // Solo guardamos la lista de vendedores (el contenido de la página)
+        if (filters.sellerType) params.append('sellerType', filters.sellerType);
+        if (filters.sellerStatus) params.append('sellerStatus', filters.sellerStatus);
+        if (filters.sellerBranchId) params.append('sellerBranchId', filters.sellerBranchId);
+        if (filters.dni) params.append('dni', filters.dni);
+
+        const url = `${API_BASE_URL}/vendedores?${params.toString()}`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: No se pudo cargar la lista de vendedores`);
+        }
+
+        const data: PageResponse = await response.json();
+        setSellers(data.content);
 
     } catch (error: unknown) {
-        // Quitamos el mock data y solo mostramos el error si falla
         setError(error as Error);
-        setSellers([]); // Aseguramos que la lista esté vacía en caso de error
+        setSellers([]);
     } finally {
         setIsLoading(false);
     }
+  }, [filters]);
+
+  // para obtener las sedes
+  const fetchSedes = useCallback(async () => {
+    setIsSedesLoading(true);
+    setSedesError(null);
+    try {
+      // Endpoint GET /api/sedes
+      const response = await fetch(`${API_BASE_URL}/sedes`);
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: No se pudo cargar la lista de sedes`);
+      }
+
+      const data: SedeResponse[] = await response.json();
+      setSedes(data);
+
+    } catch (error: unknown) {
+      setSedesError(error as Error);
+      setSedes([]);
+    } finally {
+      setIsSedesLoading(false);
+    }
   }, []);
+
+  // para cargar sedes cuando se cambia de pestaña
+  useEffect(() => {
+    if (activeTab === 'vendedores') {
+      fetchSellers();
+    } else if (activeTab === 'sedes' && sedes.length === 0 && !isSedesLoading) {
+      // Solo cargar si estamos en la pestaña y aún no hay datos
+      fetchSedes();
+    }
+  }, [activeTab, fetchSellers, fetchSedes, sedes.length, isSedesLoading]);
+
+  const handleDeactivateSeller = useCallback(async (sellerId: number) => {
+    if (!confirm(`¿Está seguro de desactivar al vendedor con ID ${sellerId}?`)) {
+      return;
+    }
+
+    try {
+      // DELETE /api/vendedores/{id}
+      const response = await fetch(`${API_BASE_URL}/vendedores/${sellerId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.status === 204) {
+        // Éxito: Desactivación completada (baja lógica)
+        alert(`Vendedor ${sellerId} desactivado exitosamente.`);
+        fetchSellers(); // Refrescar la tabla para mostrar el nuevo estado INACTIVE
+      } else if (response.status === 404) {
+        // Error: Recurso no encontrado
+        alert(`Error: Vendedor ${sellerId} no existe.`);
+      } else if (response.status === 400) {
+        // Error de negocio: Cotizaciones pendientes
+        const errorData = await response.json();
+        alert(`ACCIÓN BLOQUEADA: ${errorData.message}`);
+      } else {
+        throw new Error(`Error ${response.status} en el servidor.`);
+      }
+    } catch (error: any) {
+      alert(`Error de conexión: ${error.message}`);
+    }
+  }, [fetchSellers]); // Depende de fetchSellers
+
+  const handleActivateSeller = useCallback(async (sellerId: number) => {
+    if (!confirm(`¿Está seguro de REACTIVAR al vendedor con ID ${sellerId}?`)) {
+      return;
+    }
+
+    try {
+      // Usaremos un endpoint PATCH/PUT para cambiar el estado a ACTIVO
+      // Asume que el backend tiene el endpoint: PATCH /api/vendedores/{id}/activate
+      const response = await fetch(`${API_BASE_URL}/vendedores/${sellerId}/reactivar`, {
+        method: 'POST',
+      });
+
+      if (response.ok) { // Verifica si el código es 2xx (e.g., 200 OK)
+        // Éxito: Reactivación completada
+        alert(`Vendedor ${sellerId} reactivado exitosamente.`);
+        fetchSellers(); // Refrescar la tabla para mostrar el nuevo estado ACTIVE
+      } else if (response.status === 404) {
+        alert(`Error: Vendedor ${sellerId} no existe.`);
+      } else {
+        // Manejo de otros posibles errores, como sede inactiva, etc.
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status} en el servidor.`);
+      }
+    } catch (error: any) {
+      alert(`Error de conexión o de negocio: ${error.message}`);
+    }
+  }, [fetchSellers]);
 
   useEffect(() => {
     if (activeTab === 'vendedores') {
@@ -120,9 +251,8 @@ export function PaginaVendedor() {
           {activeTab === 'vendedores' && (
             <div>
               <SellerToolbar
-                onNewSellerClick={() => {
-                  setIsCreateModalOpen(true);
-                }}
+                onNewSellerClick={() => { setIsCreateModalOpen(true);}}
+                onFilterChange={handleFilterChange}
               />
 
               {isLoading && <p className='py-4 text-center text-gray-600'>Cargando vendedores desde el backend...</p>}
@@ -136,15 +266,35 @@ export function PaginaVendedor() {
               )}
              
               {/* Solo mostramos la tabla si no está cargando y no hay error */}
-              {!isLoading && !error && <SellerTable sellers={mappedSellers} />}
+              {!isLoading && !error && <SellerTable
+                                          sellers={mappedSellers}
+                                          onDeactivate={(id) => handleDeactivateSeller(id)}
+                                          onActivate={(id) => handleActivateSeller(id)}
+                                        />}
             </div>
           )}
 
           {/* Contenido de la pestaña SEDES */}
           {activeTab === 'sedes' && (
             <div className="p-4">
-              <h3 className="text-xl font-semibold">Visualizar Sedes de Venta por TODO</h3>
-              <p className="text-gray-500 mt-2">Waaaaaaa.).</p>
+                <h3 className="text-xl font-semibold">Listados de sede de ventas</h3>
+                {isSedesLoading && <p className='py-4 text-center text-gray-600'>Cargando sedes...</p>}
+
+                {sedesError && (
+                    <div className='p-4 my-4 bg-red-100 text-red-700 rounded-md'>
+                        <p className='font-bold'>Error al cargar sedes:</p>
+                        <p>{sedesError.message}</p>
+                        <p className='mt-2 text-sm'>Asegúrese de que el backend ({API_BASE_URL}) esté activo.</p>
+                    </div>
+                )}
+
+                {/* VISUALIZACIÓN DE LA TABLA */}
+                {!isSedesLoading && !sedesError && sedes.length > 0 && (
+                    <SedeTable sedes={sedes} />
+                )}
+                {!isSedesLoading && !sedesError && sedes.length === 0 && (
+                    <p className='py-4 text-center text-gray-500 italic'>No hay sedes registradas o activas.</p>
+                )}
             </div>
           )}
         </div>
