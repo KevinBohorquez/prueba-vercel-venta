@@ -16,6 +16,7 @@ public class CorsConfig {
                 registry.addMapping("/**")
                         .allowedOrigins(
                                 "https://mod-ventas.vercel.app",
+                                "https://prueba-vercel-venta-9ubr.vercel.app/", //otro vercel de rhamses
                                 "http://localhost:5173",
                                 "http://localhost:3000"
                         )
