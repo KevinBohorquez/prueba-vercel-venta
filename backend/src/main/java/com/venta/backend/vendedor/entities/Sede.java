@@ -34,6 +34,9 @@ public class Sede {
     @Column(name = "capacidad_maxima")
     private Integer capacidadMaxima;
 
-    @Column(name = "activo")
-    private boolean activo;
+    @Column(name = "status")
+    private boolean active;
+
+    @Column(name = "warehouse_ref_id")
+    private Long warehouseRefId; // ID del almacén en el módulo de Inventario
 }

@@ -14,12 +14,12 @@ import com.venta.backend.vendedor.application.servicios.IVendedorConsultaServici
 import com.venta.backend.vendedor.application.specifications.VendedorEspecificacion;
 import com.venta.backend.vendedor.entities.Sede;
 import com.venta.backend.vendedor.entities.Vendedor;
+import com.venta.backend.vendedor.enums.BranchType;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.enums.SellerType;
 import com.venta.backend.vendedor.infraestructura.clientes.IClienteCotizacion;
 import com.venta.backend.vendedor.infraestructura.repository.SedeRepositorio;
 import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +27,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -37,6 +39,7 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     private final IFabricaStrategia fabricaStrategia;
     private final IVendedorMapeador vendedorMapeador;
     private final IClienteCotizacion clienteCotizacion;
+
 
     @Override
     @Transactional
@@ -50,9 +53,10 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
         }
         Sede sedeAsignada = findSedeEntityById(request.getSellerBranchId());
 
-        Vendedor newVendedor = strategia.createSellerEntity(request);
+        validateBranchCapacity(sedeAsignada);
 
-        newVendedor.asignarSede(sedeAsignada);
+        Vendedor newVendedor = strategia.createSellerEntity(request);
+        newVendedor.assignBranch(sedeAsignada);
 
         Vendedor savedVendedor = vendedorRepositorio.save(newVendedor);
 
@@ -71,6 +75,7 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
 
         if (newBranchId != null && !newBranchId.equals(vendedorToUpdate.getSede().getIdSede())) {
             newSede = findSedeEntityById(newBranchId);
+            validateBranchCapacity(newSede);
         }
 
         strategia.applyChanges(vendedorToUpdate, request, newSede);
@@ -98,7 +103,10 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     @Transactional
     public VendedorResponse reactivateSeller(Long sellerId) {
         Vendedor vendedor = findSellerEntityById(sellerId);
-        vendedor.cambiarEstado(SellerStatus.ACTIVE);
+
+        validateBranchCapacity(vendedor.getSellerBranch());
+
+        vendedor.changeStatus(SellerStatus.ACTIVE);
         Vendedor reactivatedVendedor = vendedorRepositorio.save(vendedor);
         return vendedorMapeador.toVendedorResponse(reactivatedVendedor);
     }
@@ -107,6 +115,12 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     @Transactional(readOnly = true)
     public VendedorResponse findSellerById(Long sellerId) {
         Vendedor vendedor = findSellerEntityById(sellerId);
+
+        if (vendedor.getSellerStatus() == SellerStatus.INACTIVE) {
+            throw new RegistroVendedorException("El vendedor con ID " + sellerId
+                    + "se encuentra inactivo y no puede realizar ventas");
+        }
+
         return vendedorMapeador.toVendedorResponse(vendedor);
     }
 
@@ -152,5 +166,20 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     private Sede findSedeEntityById(Long sedeId) {
         return sedeRepositorio.findById(sedeId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Sede no encontrada con ID: " + sedeId));
+    }
+
+    private void validateBranchCapacity(Sede sede) {
+        if (sede.getBranchType() == BranchType.CALL_CENTER) {
+            return;
+        }
+
+        Long currentSellers = vendedorRepositorio.countActiveSellersByBranch(sede.getBranchId());
+
+        if (sede.getMaxCapacity() != null && currentSellers >= sede.getMaxCapacity()) {
+            throw new RegistroVendedorException(
+                    "La sede ha alcanzado su capacidad máxima de vendedores ("
+                            + sede.getMaxCapacity() + ")"
+            );
+        }
     }
 }

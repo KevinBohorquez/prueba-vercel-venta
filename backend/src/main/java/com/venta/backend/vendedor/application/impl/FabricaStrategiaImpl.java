@@ -9,13 +9,6 @@ import org.springframework.stereotype.Component;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- * Implementación de la Fábrica de Estrategias.
- * Esta clase es responsable de proveer la implementación de estrategia
- * correcta (Interna o Externa) según se requiera.
- * Utiliza Inyección de Dependencias en el constructor para recibir
- * todas las estrategias disponibles y organizarlas.
- */
 @Component
 public class FabricaStrategiaImpl implements IFabricaStrategia {
 
@@ -26,9 +19,6 @@ public class FabricaStrategiaImpl implements IFabricaStrategia {
 
     /**
      * Constructor de la Fábrica.
-     * Spring Boot verá este constructor y automáticamente inyectará
-     * las implementaciones de las estrategias que le pedimos como parámetros.
-     *
      * @param internoRegistroImpl   Implementación de registro interno.
      * @param externoRegistroImpl   Implementación de registro externo.
      * @param internoEdicionImpl    Implementación de edición interna.

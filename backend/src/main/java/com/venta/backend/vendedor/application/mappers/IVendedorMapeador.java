@@ -24,13 +24,10 @@ public interface IVendedorMapeador {
      * @param vendedor La entidad Vendedor desde la BD.
      * @return El DTO VendedorResponse para la API.
      */
-
-    // 1. Mapeo Anidado: Saca el ID de la Sede
-    @Mapping(source = "sede.idSede", target = "sellerBranchId")
-    // 2. Mapeo Anidado: Saca el Nombre de la Sede
-    @Mapping(source = "sede.nombre", target = "sellerBranchName")
-    // 3. Mapeo por Método: Llama al método getNombreCompleto() de la entidad Vendedor
-    @Mapping(source = "nombreCompleto", target = "fullName")
+    @Mapping(source = "sellerBranch.branchId", target = "sellerBranchId")
+    @Mapping(source = "sellerBranch.name", target = "sellerBranchName")
+    @Mapping(source = "fullName", target = "fullName")
+    @Mapping(source = "sellerBranch.warehouseRefId", target = "warehouseRefId")
     VendedorResponse toVendedorResponse(Vendedor vendedor);
 
     /**
