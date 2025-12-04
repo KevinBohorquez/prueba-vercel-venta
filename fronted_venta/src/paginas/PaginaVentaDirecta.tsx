@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfirmCancelModal } from '../components/ConfirmCancelModal'; // <--- IMPORTAR MODAL
 
 // --- Iconos SVG ---
@@ -43,22 +43,84 @@ interface ProductoVenta {
   cantidad: number;
 }
 
+interface LineaCarritoApi {
+  detalleId: number;
+  itemProductoId: number;
+  nombreProducto: string;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+}
+
+interface VentaResumenApi {
+  ventaId: number;
+  origen: 'DIRECTA' | 'LEAD' | 'COTIZACION';
+  estado: 'BORRADOR' | 'CONFIRMADA' | 'CANCELADA';
+  subtotal: number;
+  descuentoTotal: number;
+  total: number;
+  items: LineaCarritoApi[];
+}
+
 export function PaginaVentaDirecta() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const ventaId = searchParams.get('ventaId');
 
   // Estado para controlar el modal de confirmación
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
-  const [productos, setProductos] = useState<ProductoVenta[]>([
-    { id: '1', codigo: 'PROD001', nombre: 'Apple', precioUnitario: 4500.00, cantidad: 1 },
-    { id: '2', codigo: 'PROD002', nombre: 'Samsung', precioUnitario: 300.00, cantidad: 2 },
-    { id: '3', codigo: 'PROD003', nombre: 'Advance', precioUnitario: 250.00, cantidad: 1 },
-  ]);
+  const [productos, setProductos] = useState<ProductoVenta[]>([]);
+  const [subtotalApi, setSubtotalApi] = useState(0);
+  const [descuentoApi, setDescuentoApi] = useState(0);
+  const [totalApi, setTotalApi] = useState(0);
+  
+  // Estado para cliente
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<{
+    id: number;
+    nombre: string;
+    dni: string;
+    telefono: string;
+    direccion: string;
+  } | null>(null);
+  const [busquedaCliente, setBusquedaCliente] = useState('');
+  const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
 
-  const [descuento] = useState(100.00);
+  useEffect(() => {
+    if (!ventaId) return;
 
-  const subtotal = productos.reduce((acc, item) => acc + (item.precioUnitario * item.cantidad), 0);
-  const total = subtotal - descuento;
+    const fetchResumen = async () => {
+      try {
+        const response = await fetch(`/api/venta/${ventaId}/carrito`);
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el resumen de la venta');
+        }
+        const data: VentaResumenApi = await response.json();
+
+        const mappedProductos: ProductoVenta[] = data.items.map((item) => ({
+          id: String(item.detalleId ?? item.itemProductoId),
+          codigo: String(item.itemProductoId),
+          nombre: item.nombreProducto,
+          precioUnitario: item.precioUnitario,
+          cantidad: item.cantidad,
+        }));
+
+        setProductos(mappedProductos);
+        setSubtotalApi(data.subtotal);
+        setDescuentoApi(data.descuentoTotal);
+        setTotalApi(data.total);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    fetchResumen();
+  }, [ventaId]);
+
+  // Usar valores del backend directamente
+  const subtotal = subtotalApi;
+  const descuento = descuentoApi;
+  const total = totalApi;
 
   const updateCantidad = (id: string, delta: number) => {
     setProductos(prev => prev.map(prod => {
@@ -72,6 +134,26 @@ export function PaginaVentaDirecta() {
 
   const eliminarProducto = (id: string) => {
     setProductos(prev => prev.filter(p => p.id !== id));
+  };
+
+  const handleAsignarCliente = () => {
+    // TODO: Aquí irá la lógica de búsqueda real cuando tengas el endpoint
+    // Por ahora simulamos con datos mock
+    if (busquedaCliente.trim()) {
+      setClienteSeleccionado({
+        id: 1,
+        nombre: 'Juan Pérez',
+        dni: '12345678',
+        telefono: '+51 987 654 321',
+        direccion: 'Av. Principal 123, Lima',
+      });
+      setBusquedaCliente('');
+    }
+  };
+
+  const handleEliminarCliente = () => {
+    setClienteSeleccionado(null);
+    setBusquedaCliente('');
   };
 
   return (
@@ -99,9 +181,27 @@ export function PaginaVentaDirecta() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-gray-800">Cliente</h2>
-              <button className="bg-[#3C83F6] hover:bg-blue-600 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors">
-                <span className="mr-1 text-lg leading-none">+</span> Registrar cliente
-              </button>
+              <div className="flex gap-2">
+                <button className="bg-[#3C83F6] hover:bg-blue-600 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors">
+                  <span className="mr-1 text-lg leading-none">+</span> Registrar cliente
+                </button>
+                {clienteSeleccionado ? (
+                  <button 
+                    onClick={handleEliminarCliente}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors"
+                  >
+                    Eliminar Cliente
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleAsignarCliente}
+                    disabled={!busquedaCliente.trim()}
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors"
+                  >
+                    Asignar Cliente
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="relative mb-6">
@@ -112,27 +212,40 @@ export function PaginaVentaDirecta() {
                 type="text" 
                 placeholder="Buscar por Nombre, DNI, RUC..." 
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                value={busquedaCliente}
+                onChange={(e) => setBusquedaCliente(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && busquedaCliente.trim() && !clienteSeleccionado) {
+                    handleAsignarCliente();
+                  }
+                }}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
-              <div>
-                <span className="block text-gray-500 mb-1">Nombre del Cliente</span>
-                <span className="block font-medium text-gray-900 text-base">Juan Pérez</span>
+            {clienteSeleccionado ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                <div>
+                  <span className="block text-gray-500 mb-1">Nombre del Cliente</span>
+                  <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.nombre}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 mb-1">DNI/RUC</span>
+                  <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.dni}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 mb-1">Teléfono</span>
+                  <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.telefono}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-500 mb-1">Dirección</span>
+                  <span className="block font-medium text-gray-900 text-base">{clienteSeleccionado.direccion}</span>
+                </div>
               </div>
-              <div>
-                <span className="block text-gray-500 mb-1">DNI/RUC</span>
-                <span className="block font-medium text-gray-900 text-base">12345678A</span>
+            ) : (
+              <div className="text-center py-8 text-gray-400 text-sm italic">
+                No hay cliente asignado. Busque y asigne un cliente para continuar.
               </div>
-              <div>
-                <span className="block text-gray-500 mb-1">Teléfono</span>
-                <span className="block font-medium text-gray-900 text-base">+51 987 654 321</span>
-              </div>
-              <div>
-                <span className="block text-gray-500 mb-1">Dirección</span>
-                <span className="block font-medium text-gray-900 text-base">Av. Principal 123, Lima</span>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Tarjeta Productos */}
@@ -219,9 +332,20 @@ export function PaginaVentaDirecta() {
                 <span>- S/ {descuento.toFixed(2)}</span>
               </div>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-4">
               <span className="font-bold text-gray-900 text-lg">Total a Pagar</span>
               <span className="font-bold text-gray-900 text-xl">S/ {total.toFixed(2)}</span>
+            </div>
+            <div className="pt-4 border-t border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
+              <select
+                value={metodoPago}
+                onChange={(e) => setMetodoPago(e.target.value as 'EFECTIVO' | 'TARJETA')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TARJETA">Tarjeta</option>
+              </select>
             </div>
           </div>
 
