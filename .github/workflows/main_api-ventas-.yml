@@ -24,14 +24,27 @@ jobs:
           java-version: '21'
           distribution: 'microsoft'
 
-      - name: Build with Maven
-        run: mvn clean install
+      # --- CAMBIO 1: Configurar Gradle ---
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
+      # --- CAMBIO 2: Build con Gradle y mover al directorio del backend ---
+      - name: Build with Gradle
+        # Ejecutamos el comando de Gradle DENTRO del directorio 'backend'
+        run: |
+          cd backend/
+          ./gradlew clean build -x test
+        # Nota: '-x test' se usa para saltar las pruebas y acelerar la compilación,
+        # pero es mejor quitárselo si las pruebas pasan rápido y quieres que se ejecuten.
+
+      # --- CAMBIO 3: Upload artifact ajustando la ruta del JAR (incluyendo 'backend') ---
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+          # La ruta al JAR ahora debe incluir 'backend/'
+          # Asume que el JAR ejecutable está en backend/build/libs/
+          path: 'backend/build/libs/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
@@ -39,13 +52,13 @@ jobs:
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
-  
+
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: java-app
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -60,4 +73,3 @@ jobs:
           app-name: 'api-ventas-'
           slot-name: 'Production'
           package: '*.jar'
-          
