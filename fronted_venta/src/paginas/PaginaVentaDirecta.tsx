@@ -112,9 +112,9 @@ export function PaginaVentaDirecta() {
         }));
 
         setProductos(mappedProductos);
-        setSubtotalApi(data.subtotal);
+        //setSubtotalApi(data.subtotal);
         setDescuentoApi(data.descuentoTotal);
-        setTotalApi(data.total);
+        //setTotalApi(data.total);
       } catch (e) {
         console.error(e);
       }
