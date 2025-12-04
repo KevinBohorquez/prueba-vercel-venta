@@ -26,11 +26,11 @@ public interface IVendedorMapeador {
      */
 
     // 1. Mapeo Anidado: Saca el ID de la Sede
-    @Mapping(source = "sellerBranch.branchId", target = "sellerBranchId")
+    @Mapping(source = "sede.idSede", target = "sellerBranchId")
     // 2. Mapeo Anidado: Saca el Nombre de la Sede
-    @Mapping(source = "sellerBranch.name", target = "sellerBranchName")
-    // 3. Mapeo por Método: Llama al método getFullName() de la entidad Vendedor
-    @Mapping(source = "fullName", target = "fullName")
+    @Mapping(source = "sede.nombre", target = "sellerBranchName")
+    // 3. Mapeo por Método: Llama al método getNombreCompleto() de la entidad Vendedor
+    @Mapping(source = "nombreCompleto", target = "fullName")
     VendedorResponse toVendedorResponse(Vendedor vendedor);
 
     /**

@@ -16,79 +16,76 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "vendedores")
+@Table(name = "Vendedor")
 public class Vendedor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long sellerId;
+    @Column(name = "id_vendedor")
+    private Long idVendedor;
 
-    @Column(nullable = false, unique = true, length = 8)
+    @Column(name = "dni", nullable = false, unique = true, length = 8)
     private String dni;
 
-    @Column(nullable = false)
-    private String firstName;
+    @Column(name = "primer_nombre", nullable = false)
+    private String primerNombre;
 
-    @Column(nullable = false)
-    private String lastName;
+    @Column(name = "apellido", nullable = false)
+    private String apellido;
 
-    @Column(unique = true)
+    @Column(name = "email", unique = true)
     private String email;
 
-    @Column(length = 15) // Buena práctica poner longitud
-    private String phoneNumber;
+    @Column(name = "numero_telefono", length = 15)
+    private String numeroTelefono;
 
-    private String address;
+    @Column(name = "direccion")
+    private String direccion;
 
-    @Column(nullable = false, updatable = false) // Se asigna al crear y no se actualiza
-    private LocalDate registrationDate;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SellerType sellerType;
+    @Column(name = "fecha_registro", nullable = false, updatable = false)
+    private LocalDate fechaRegistro;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SellerStatus sellerStatus;
+    @Column(name = "tipo_vendedor", nullable = false)
+    private SellerType tipoVendedor;
 
-    /*
-    * significa que la información de la sede (Sede)
-    * solo se carga de la base de datos cuando realmente
-    * se necesita (acceso diferido), optimizando el rendimiento.
-    * */
-    @ManyToOne(fetch = FetchType.LAZY) // Relación: Muchos Vendedores van a una Sede
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_vendedor", nullable = false)
+    private SellerStatus estadoVendedor;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_sede", nullable = false)
-    private Sede sellerBranch;
+    private Sede sede;
 
     /**
      * Comprueba si el vendedor está activo.
      * @return true si el estado es ACTIVE, false de lo contrario.
      */
     public boolean isActive() {
-        return this.sellerStatus == SellerStatus.ACTIVE;
+        return this.estadoVendedor == SellerStatus.ACTIVE;
     }
 
     /**
      * Cambia el estado del vendedor (para baja lógica o reactivación).
-     * @param newStatus El nuevo estado (ACTIVE o INACTIVE).
+     * @param nuevoEstado El nuevo estado (ACTIVE o INACTIVE).
      */
-    public void changeStatus(SellerStatus newStatus) {
-        this.sellerStatus = newStatus;
+    public void cambiarEstado(SellerStatus nuevoEstado) {
+        this.estadoVendedor = nuevoEstado;
     }
 
     /**
      * Asigna o reasigna al vendedor a una nueva sede.
-     * @param newBranch La nueva entidad Sede.
+     * @param nuevaSede La nueva entidad Sede.
      */
-    public void assignBranch(Sede newBranch) {
-        this.sellerBranch = newBranch;
+    public void asignarSede(Sede nuevaSede) {
+        this.sede = nuevaSede;
     }
 
     /**
      * Devuelve el nombre completo del vendedor.
-     * @return String con "firstName lastName".
+     * @return String con "primerNombre apellido".
      */
-    public String getFullName() {
-        return this.firstName + " " + this.lastName;
+    public String getNombreCompleto() {
+        return this.primerNombre + " " + this.apellido;
     }
 }

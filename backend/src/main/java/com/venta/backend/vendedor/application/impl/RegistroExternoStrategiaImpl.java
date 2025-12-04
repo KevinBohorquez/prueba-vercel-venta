@@ -41,15 +41,15 @@ public class RegistroExternoStrategiaImpl implements IRegistroVendedorStrategia 
         // Builder definido en la entidad vendedor
         return Vendedor.builder()
                 .dni(request.getDni())
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
+                .primerNombre(request.getFirstName())
+                .apellido(request.getLastName())
                 .email(request.getEmail())
-                .phoneNumber(request.getPhoneNumber())
-                .address(request.getAddress())
-                .sellerType(request.getSellerType())
-                .sellerStatus(SellerStatus.ACTIVE)
-                .registrationDate(LocalDate.now()) // Fecha de hoy
-                // La Sede (sellerBranch) se asignará en el Servicio principal
+                .numeroTelefono(request.getPhoneNumber())
+                .direccion(request.getAddress())
+                .tipoVendedor(request.getSellerType())
+                .estadoVendedor(SellerStatus.ACTIVE)
+                .fechaRegistro(LocalDate.now()) // Fecha de hoy
+                // La Sede se asignará en el Servicio principal
                 .build();
     }
 }

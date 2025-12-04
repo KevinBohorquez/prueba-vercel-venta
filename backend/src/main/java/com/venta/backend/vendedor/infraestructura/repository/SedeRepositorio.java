@@ -14,13 +14,13 @@ public interface SedeRepositorio extends JpaRepository<Sede, Long> {
      * Busca todas las sedes que están activas.
      * @return Una lista de entidades Sede activas.
      */
-    List<Sede> findByActive(boolean active);
+    List<Sede> findByActivo(boolean activo);
 
     /**
      * Busca todas las sedes de un tipo específico.
      * (Podría ser útil para filtros)
-     * @param branchType El tipo de sede (MODULE, CALL_CENTER, etc.)
+     * @param tipoSede El tipo de sede (MODULE, CALL_CENTER, etc.)
      * @return Una lista de entidades Sede de ese tipo.
      */
-    List<Sede> findByBranchType(BranchType branchType);
+    List<Sede> findByTipoSede(BranchType tipoSede);
 }

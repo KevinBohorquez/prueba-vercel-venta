@@ -13,11 +13,11 @@ public class EdicionInternaStrategiaImpl implements IEdicionVendedorStrategia {
     public void applyChanges(Vendedor sellerToUpdate, ModificacionVendedorRequest request, Sede newBranch) {
 
         if (newBranch != null) {
-            sellerToUpdate.assignBranch(newBranch);
+            sellerToUpdate.asignarSede(newBranch);
         }
 
         if (request.getSellerStatus() != null) {
-            sellerToUpdate.changeStatus(request.getSellerStatus());
+            sellerToUpdate.cambiarEstado(request.getSellerStatus());
         }
     }
 }

@@ -16,9 +16,10 @@ public class ItemProducto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_item_producto")
     private Long id;
 
-    @Column(name = "TipoItem")
+    @Column(name = "tipo_item")
     private String tipoItem;
 
     private String nombre;

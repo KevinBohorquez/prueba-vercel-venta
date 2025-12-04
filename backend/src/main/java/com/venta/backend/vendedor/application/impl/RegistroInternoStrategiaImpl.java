@@ -40,15 +40,15 @@ public class RegistroInternoStrategiaImpl implements IRegistroVendedorStrategia 
 
         return Vendedor.builder()
                 .dni(empleadoRRHH.getDni())
-                .firstName(empleadoRRHH.getFirstName())
-                .lastName(empleadoRRHH.getLastName())
+                .primerNombre(empleadoRRHH.getFirstName())
+                .apellido(empleadoRRHH.getLastName())
                 .email(empleadoRRHH.getEmail())
-                .phoneNumber(empleadoRRHH.getPhoneNumber())
-                .address(empleadoRRHH.getAddress())
-                .sellerType(request.getSellerType()) // Será INTERNAL
-                .sellerStatus(SellerStatus.ACTIVE) // Estado por defecto
-                .registrationDate(LocalDate.now())
-                // La Sede (sellerBranch) se asignará en el Servicio principal
+                .numeroTelefono(empleadoRRHH.getPhoneNumber())
+                .direccion(empleadoRRHH.getAddress())
+                .tipoVendedor(request.getSellerType()) // Será INTERNAL
+                .estadoVendedor(SellerStatus.ACTIVE) // Estado por defecto
+                .fechaRegistro(LocalDate.now())
+                // La Sede se asignará en el Servicio principal
                 .build();
     }
 }

@@ -52,7 +52,7 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
 
         Vendedor newVendedor = strategia.createSellerEntity(request);
 
-        newVendedor.assignBranch(sedeAsignada);
+        newVendedor.asignarSede(sedeAsignada);
 
         Vendedor savedVendedor = vendedorRepositorio.save(newVendedor);
 
@@ -64,12 +64,12 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     public VendedorResponse updateSeller(Long sellerId, ModificacionVendedorRequest request) {
         Vendedor vendedorToUpdate = findSellerEntityById(sellerId);
 
-        IEdicionVendedorStrategia strategia = fabricaStrategia.getEditionStrategy(vendedorToUpdate.getSellerType());
+        IEdicionVendedorStrategia strategia = fabricaStrategia.getEditionStrategy(vendedorToUpdate.getTipoVendedor());
 
         Sede newSede = null;
         Long newBranchId = request.getSellerBranchId();
 
-        if (newBranchId != null && !newBranchId.equals(vendedorToUpdate.getSellerBranch().getBranchId())) {
+        if (newBranchId != null && !newBranchId.equals(vendedorToUpdate.getSede().getIdSede())) {
             newSede = findSedeEntityById(newBranchId);
         }
 
@@ -89,7 +89,7 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
             throw new RegistroVendedorException("Acción bloqueada: El vendedor tiene cotizaciones pendientes.");
         }
 
-        vendedor.changeStatus(SellerStatus.INACTIVE);
+        vendedor.cambiarEstado(SellerStatus.INACTIVE);
 
         vendedorRepositorio.save(vendedor);
     }
@@ -98,7 +98,7 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
     @Transactional
     public VendedorResponse reactivateSeller(Long sellerId) {
         Vendedor vendedor = findSellerEntityById(sellerId);
-        vendedor.changeStatus(SellerStatus.ACTIVE);
+        vendedor.cambiarEstado(SellerStatus.ACTIVE);
         Vendedor reactivatedVendedor = vendedorRepositorio.save(vendedor);
         return vendedorMapeador.toVendedorResponse(reactivatedVendedor);
     }

@@ -13,25 +13,27 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "sedes")
+@Table(name = "Sede")
 public class Sede {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long branchId;
+    @Column(name = "id_sede")
+    private Long idSede;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+    @Column(name = "nombre", nullable = false, unique = true)
+    private String nombre;
 
-    @Column(nullable = false)
-    private String address;
+    @Column(name = "direccion", nullable = false)
+    private String direccion;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
-    private BranchType branchType;
+    @Column(name = "tipo_sede", nullable = false)
+    private BranchType tipoSede;
 
-    private Integer maxCapacity;
+    @Column(name = "capacidad_maxima")
+    private Integer capacidadMaxima;
 
-    @Column(name = "status")
-    private boolean active;
+    @Column(name = "activo")
+    private boolean activo;
 }

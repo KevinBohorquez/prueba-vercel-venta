@@ -35,6 +35,8 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
                 .getFactory(OrigenVenta.DIRECTA)
                 .crearVentaBorrador(new VentaDraftData(OrigenVenta.DIRECTA, request.getUsuarioCreador()));
 
+        venta.setNumVenta(generarCodigoVenta(OrigenVenta.DIRECTA));
+
         Venta guardada = ventaRepositorio.save(venta);
         return ventaMapper.toResumen(guardada);
     }
@@ -63,6 +65,27 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
         return ventaMapper.toResumen(venta);
+    }
+
+    private String generarCodigoVenta(OrigenVenta origenVenta) {
+        String prefijoTipo;
+        switch (origenVenta) {
+            case LEAD -> prefijoTipo = "LED";
+            case COTIZACION -> prefijoTipo = "COT";
+            default -> prefijoTipo = "DIR";
+        }
+
+        String prefijo = "VTA-" + prefijoTipo + "-";
+
+        return ventaRepositorio.findFirstByOrigenVentaOrderByIdDesc(origenVenta)
+                .map(Venta::getNumVenta)
+                .filter(codigo -> codigo != null && codigo.startsWith(prefijo))
+                .map(codigo -> {
+                    String numeroStr = codigo.substring(prefijo.length());
+                    int numero = Integer.parseInt(numeroStr);
+                    return prefijo + String.format("%06d", numero + 1);
+                })
+                .orElse(prefijo + "000001");
     }
 }
 
