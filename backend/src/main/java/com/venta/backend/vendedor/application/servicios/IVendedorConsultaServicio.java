@@ -52,4 +52,13 @@ public interface IVendedorConsultaServicio {
      * @return Lista de VendedorResponse activos.
      */
     List<VendedorResponse> listActiveSellers();
+
+    /**
+     * Busca el VendedorResponse local por su ID de empleado de RRHH.
+     * (Usado por módulos externos para obtener el sellerId local para transacciones).
+     *
+     * @param employeeRrhhId El ID del empleado de RRHH.
+     * @return El VendedorResponse (contiene el sellerId, que es la llave de la tabla Venta).
+     */
+    VendedorResponse findSellerByEmployeeRrhhId(Long employeeRrhhId);
 }

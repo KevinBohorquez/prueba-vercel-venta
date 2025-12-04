@@ -182,4 +182,17 @@ public class VendedorServicioImpl implements IVendedorAdminServicio, IVendedorCo
             );
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public VendedorResponse findSellerByEmployeeRrhhId(Long employeeRrhhId) {
+        // Buscar por la columna de referencia
+        Vendedor vendedor = vendedorRepositorio.findByEmployeeRrhhId(employeeRrhhId)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Vendedor (interno) no encontrado con ID RRHH: " + employeeRrhhId
+                ));
+
+        // El DTO VendedorResponse ya contiene el sellerId (la llave primaria)
+        return vendedorMapeador.toVendedorResponse(vendedor);
+    }
 }

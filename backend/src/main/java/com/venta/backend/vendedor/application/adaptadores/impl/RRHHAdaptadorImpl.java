@@ -13,19 +13,26 @@ import java.time.LocalDate;
 public class RRHHAdaptadorImpl implements IAdaptadorEmpleado {
     @Override
     public Vendedor adaptar(EmpleadoRRHHDTO empleadoDTO) {
+
+        String lastName = empleadoDTO.getApellidoPaterno() + " " + empleadoDTO.getApellidoMaterno();
+
         return Vendedor.builder()
-                .dni(empleadoDTO.getDni())
-                .firstName(empleadoDTO.getFirstName())
-                .lastName(empleadoDTO.getLastName())
+                // 🚨 Mapeo de campos
+                .dni(empleadoDTO.getDocumentoIdentidad())
+                .firstName(empleadoDTO.getNombres())
+                .lastName(lastName)
                 .email(empleadoDTO.getEmail())
-                .phoneNumber(empleadoDTO.getPhoneNumber())
-                .address(empleadoDTO.getAddress())
-                // Asignaciones internas por defecto al adaptarse de RRHH:
+                .phoneNumber(empleadoDTO.getTelefono())
+                .address(empleadoDTO.getDireccion())
+
+                // Asignaciones internas por defecto:
                 .sellerStatus(SellerStatus.ACTIVE)
                 .registrationDate(LocalDate.now())
-                .employeeRrhhId(empleadoDTO.getEmployeeId())
+
+                // 🚨 Mapeo del ID de Referencia
+                .employeeRrhhId(empleadoDTO.getIdEmpleado())
+
                 .documentType(DocumentType.DNI)
-                // Nota: sellerType y sellerBranch se asignan en la estrategia/servicio principal
                 .build();
     }
 }
