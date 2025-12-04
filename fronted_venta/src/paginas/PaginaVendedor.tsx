@@ -98,6 +98,34 @@ export function PaginaVendedor() {
     }
   }, [fetchSellers]); // Depende de fetchSellers
 
+  const handleActivateSeller = useCallback(async (sellerId: number) => {
+    if (!confirm(`¿Está seguro de REACTIVAR al vendedor con ID ${sellerId}?`)) {
+      return;
+    }
+
+    try {
+      // Usaremos un endpoint PATCH/PUT para cambiar el estado a ACTIVO
+      // Asume que el backend tiene el endpoint: PATCH /api/vendedores/{id}/activate
+      const response = await fetch(`${API_BASE_URL}/vendedores/${sellerId}/activate`, {
+        method: 'PATCH', // Usamos PATCH para actualizar parcialmente el estado
+      });
+
+      if (response.ok) { // Verifica si el código es 2xx (e.g., 200 OK)
+        // Éxito: Reactivación completada
+        alert(`Vendedor ${sellerId} reactivado exitosamente.`);
+        fetchSellers(); // Refrescar la tabla para mostrar el nuevo estado ACTIVE
+      } else if (response.status === 404) {
+        alert(`Error: Vendedor ${sellerId} no existe.`);
+      } else {
+        // Manejo de otros posibles errores, como sede inactiva, etc.
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status} en el servidor.`);
+      }
+    } catch (error: any) {
+      alert(`Error de conexión o de negocio: ${error.message}`);
+    }
+  }, [fetchSellers]);
+
   useEffect(() => {
     if (activeTab === 'vendedores') {
       fetchSellers();
