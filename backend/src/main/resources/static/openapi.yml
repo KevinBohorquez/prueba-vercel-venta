@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: API de Ventas
-  description: API para gestión de ventas, cotizaciones, clientes y productos
+  description: API para gestión de ventas, cotizaciones, clientes, productos, descuentos y vendedores
   version: 1.0.0
   contact:
     name: Equipo de Desarrollo
@@ -130,8 +130,392 @@ paths:
         '404':
           description: Cotización no encontrada
 
+  /api/vendedores:
+    get:
+      tags:
+        - Vendedores
+      summary: Busca y lista vendedores con filtros y paginación
+      description: Permite buscar vendedores por tipo, estado, sede o DNI.
+      operationId: searchSellers
+      parameters:
+        - name: sellerType
+          in: query
+          schema:
+            $ref: '#/components/schemas/SellerTypeEnum'
+          description: Filtro por tipo de vendedor (INTERNAL o EXTERNAL)
+        - name: sellerStatus
+          in: query
+          schema:
+            $ref: '#/components/schemas/SellerStatusEnum'
+          description: Filtro por estado del vendedor (ACTIVE o INACTIVE)
+        - name: sellerBranchId
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Filtro por ID de la sede asignada
+        - name: dni
+          in: query
+          schema:
+            type: string
+          description: Búsqueda parcial por DNI
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Página de Vendedores obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendedorPageResponse' # Usamos un Page<VendedorResponse>
+    post:
+      tags:
+        - Vendedores
+      summary: Registra un nuevo vendedor (Interno o Externo)
+      operationId: createSeller
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroVendedorRequest'
+      responses:
+        '201':
+          description: Vendedor creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendedorResponse'
+        '400':
+          description:
+            Error de validación (ej: DNI ya registrado, Sede no asignada)
+    put:
+      tags:
+        - Vendedores
+      summary: Modifica la información de un vendedor existente
+      operationId: updateSeller
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID del vendedor a modificar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModificacionVendedorRequest'
+      responses:
+        '200':
+          description: Vendedor actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendedorResponse'
+        '404':
+          description: Vendedor no encontrado
+
+    /api/vendedores/activos:
+      get:
+        tags:
+          - Vendedores
+        summary: Lista todos los vendedores activos
+        description: Útil para cargar dropdowns en otros módulos.
+        operationId: listActiveSellers
+        responses:
+          '200':
+            description: Lista de vendedores activos obtenida exitosamente
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/VendedorResponse'
+
+    /api/vendedores/{id}:
+      get:
+        tags:
+          - Vendedores
+        summary: Obtiene un vendedor por ID
+        description: Obtiene los datos de un vendedor específico. Este endpoint también valida si el vendedor está activo para realizar ventas.
+        operationId: getSellerById
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: integer
+              format: int64
+            description: ID del vendedor a buscar
+        responses:
+          '200':
+            description: Vendedor encontrado y activo
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/VendedorResponse'
+          '400':
+            description: Vendedor encontrado pero INACTIVO (Bloqueo de negocio)
+          '404':
+            description: Vendedor no encontrado
+      delete:
+        tags:
+          - Vendedores
+        summary: Da de baja (desactiva) un vendedor
+        operationId: deactivateSeller
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: integer
+              format: int64
+            description: ID del vendedor a desactivar
+        responses:
+          '204':
+            description: Vendedor desactivado exitosamente (Sin contenido)
+          '400':
+            description: Bloqueado, el vendedor tiene cotizaciones pendientes
+          '404':
+            description: Vendedor no encontrado
+
+    /api/vendedores/{id}/reactivar:
+      post:
+        tags:
+          - Vendedores
+        summary: Reactiva un vendedor inactivo
+        operationId: reactivateSeller
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: integer
+              format: int64
+            description: ID del vendedor a reactivar
+        responses:
+          '200':
+            description: Vendedor reactivado exitosamente
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/VendedorResponse'
+          '400':
+            description:
+              Error de negocio (ej: Sede sin capacidad)
+          '404':
+            description: Vendedor no encontrado
+
+    /api/vendedores/dni/{dni}:
+      get:
+        tags:
+          - Vendedores
+        summary: Busca un vendedor por DNI
+        operationId: getSellerByDni
+        parameters:
+          - name: dni
+            in: path
+            required: true
+            schema:
+              type: string
+            description: DNI del vendedor a buscar
+        responses:
+          '200':
+            description: Vendedor encontrado
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/VendedorResponse'
+          '404':
+            description: Vendedor no encontrado
+
 components:
   schemas:
+    #VENDEDOR
+    SellerTypeEnum:
+      type: string
+      enum: [ INTERNAL, EXTERNAL ]
+    SellerStatusEnum:
+      type: string
+      enum: [ ACTIVE, INACTIVE ]
+    DocumentTypeEnum:
+      type: string
+      enum: [ DNI, CE, PASSPORT, RUC ]
+    BranchTypeEnum:
+      type: string
+      enum: [ MODULE, AUTHORIZED_DEALER, CALL_CENTER, CENTRO_DE_ATENCION ]
+
+    # RESPONSE DEL VENDEDOR (DTO)
+    VendedorResponse:
+      type: object
+      properties:
+        sellerId:
+          type: integer
+          format: int64
+        dni:
+          type: string
+          example: '12345678'
+        firstName:
+          type: string
+        lastName:
+          type: string
+        fullName:
+          type: string
+          description: Nombre y Apellido concatenados
+          example: Juan Pérez García
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        address:
+          type: string
+        sellerType:
+          $ref: '#/components/schemas/SellerTypeEnum'
+        sellerStatus:
+          $ref: '#/components/schemas/SellerStatusEnum'
+        registrationDate:
+          type: string
+          format: date
+        sellerBranchId:
+          type: integer
+          format: int64
+        sellerBranchName:
+          type: string
+        employeeRrhhId:
+          type: integer
+          format: int64
+          description: ID del empleado en el módulo RRHH (solo para INTERNAL)
+        ruc:
+          type: string
+          description: RUC (solo para EXTERNAL)
+        bankAccount:
+          type: string
+        bankName:
+          type: string
+        documentType:
+          $ref: '#/components/schemas/DocumentTypeEnum'
+        warehouseRefId:
+          type: integer
+          format: int64
+          description: ID del almacén asociado a la sede (clave para Inventario)
+
+    # REQUEST DE REGISTRO
+    RegistroVendedorRequest:
+      type: object
+      required:
+        - dni
+        - sellerType
+        - sellerBranchId
+      properties:
+        dni:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        address:
+          type: string
+        sellerType:
+          $ref: '#/components/schemas/SellerTypeEnum'
+        sellerBranchId:
+          type: integer
+          format: int64
+        ruc:
+          type: string
+        bankAccount:
+          type: string
+        bankName:
+          type: string
+        documentType:
+          $ref: '#/components/schemas/DocumentTypeEnum'
+
+    # REQUEST DE MODIFICACIÓN
+    ModificacionVendedorRequest:
+      type: object
+      properties:
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        address:
+          type: string
+        sellerBranchId:
+          type: integer
+          format: int64
+          description: Nueva sede a asignar
+        sellerStatus:
+          $ref: '#/components/schemas/SellerStatusEnum'
+        bankAccount:
+          type: string
+        bankName:
+          type: string
+
+    # ENTIDAD SEDE (RESPONSE)
+    Sede:
+      type: object
+      properties:
+        branchId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        address:
+          type: string
+        branchType:
+          $ref: '#/components/schemas/BranchTypeEnum'
+        maxCapacity:
+          type: integer
+          description: Capacidad máxima de vendedores (NULL para Call Center)
+        active:
+          type: boolean
+          description: Estado de la sede (activa/inactiva)
+        warehouseRefId:
+          type: integer
+          format: int64
+          description: ID del almacén en el módulo de Inventario
+
+    # OBJETO DE PAGINACIÓN DE SPRING (Simplificado)
+    VendedorPageResponse:
+      type: object
+      description: Estructura de paginación de Spring Data
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendedorResponse'
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
+        number:
+          type: integer
+          description: Número de página actual (cero basado)
+        size:
+          type: integer
+          description: Tamaño de la página
+        last:
+          type: boolean
+          description: Indica si es la última página
     Venta:
       type: object
       properties:
