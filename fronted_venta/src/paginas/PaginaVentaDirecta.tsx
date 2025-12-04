@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ConfirmCancelModal } from '../components/ConfirmCancelModal'; // <--- IMPORTAR MODAL
+import { ConfirmCancelModal } from '../components/ConfirmCancelModal';
+import { ProductCatalogModal } from '../components/ProductCatalogModal';
+import type { Product } from '../components/ProductCatalogModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
 // --- Iconos SVG ---
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400">
@@ -68,8 +71,9 @@ export function PaginaVentaDirecta() {
   const [searchParams] = useSearchParams();
   const ventaId = searchParams.get('ventaId');
 
-  // Estado para controlar el modal de confirmación
+  // Estado para controlar los modales
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCatalogOpen, setIsCatalogOpen] = useState(false); // <--- NUEVO ESTADO PARA EL CATÁLOGO
 
   const [productos, setProductos] = useState<ProductoVenta[]>([]);
   const [subtotalApi, setSubtotalApi] = useState(0);
@@ -87,6 +91,7 @@ export function PaginaVentaDirecta() {
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
 
+  // --- Carga Inicial de Datos ---
   useEffect(() => {
     if (!ventaId) return;
 
@@ -118,11 +123,18 @@ export function PaginaVentaDirecta() {
     fetchResumen();
   }, [ventaId]);
 
-  // Usar valores del backend directamente
-  const subtotal = subtotalApi;
-  const descuento = descuentoApi;
-  const total = totalApi;
+  // --- Cálculos Locales (Para actualización inmediata UI) ---
+  // Nota: Idealmente esto debería venir del backend, pero para "solo front" lo calculamos aquí
+  const calcularTotalesLocales = () => {
+    const nuevoSubtotal = productos.reduce((acc, prod) => acc + (prod.precioUnitario * prod.cantidad), 0);
+    // Asumiendo que descuentoApi es un valor fijo por ahora, si fuera porcentaje habría que recalcular
+    const nuevoTotal = nuevoSubtotal - descuentoApi; 
+    return { subtotal: nuevoSubtotal, total: nuevoTotal };
+  };
 
+  const totales = calcularTotalesLocales();
+
+  // --- Handlers de Productos ---
   const updateCantidad = (id: string, delta: number) => {
     setProductos(prev => prev.map(prod => {
       if (prod.id === id) {
@@ -137,9 +149,33 @@ export function PaginaVentaDirecta() {
     setProductos(prev => prev.filter(p => p.id !== id));
   };
 
+  // Handler para agregar desde el Modal Steam
+  const handleAddProductFromModal = (catalogProduct: Product) => {
+    // Verificar si ya existe
+    const existe = productos.find(p => p.id === catalogProduct.id);
+    
+    if (existe) {
+      updateCantidad(catalogProduct.id, 1);
+    } else {
+      const nuevoProducto: ProductoVenta = {
+        id: catalogProduct.id,
+        codigo: catalogProduct.id, // Usamos el ID como código para el mock
+        nombre: catalogProduct.name,
+        precioUnitario: catalogProduct.price,
+        cantidad: 1
+      };
+      setProductos(prev => [...prev, nuevoProducto]);
+    }
+    
+    // Opcional: Cerrar el modal o dejarlo abierto para agregar más
+    // setIsCatalogOpen(false); 
+    
+    // Aquí podrías llamar al backend para sincronizar
+    // addProductToCartApi(ventaId, nuevoProducto);
+  };
+
+  // --- Handlers de Cliente ---
   const handleAsignarCliente = () => {
-    // TODO: Aquí irá la lógica de búsqueda real cuando tengas el endpoint
-    // Por ahora simulamos con datos mock
     if (busquedaCliente.trim()) {
       setClienteSeleccionado({
         id: 1,
@@ -255,10 +291,14 @@ export function PaginaVentaDirecta() {
               <h2 className="text-lg font-bold text-gray-800">Selección de Productos</h2>
               
               <div className="flex gap-3">
-                <button className="px-4 py-2 border border-blue-200 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium flex items-center whitespace-nowrap">
+                {/* Botón modificado para abrir el catálogo */}
+                <button 
+                  onClick={() => setIsCatalogOpen(true)}
+                  className="px-4 py-2 border border-blue-200 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium flex items-center whitespace-nowrap transition-colors"
+                >
                   <span className="mr-2"><PlusIcon/></span> Agregar producto
                 </button>
-                <button className="px-4 py-2 border border-blue-200 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium flex items-center whitespace-nowrap">
+                <button className="px-4 py-2 border border-blue-200 text-blue-600 rounded hover:bg-blue-50 text-sm font-medium flex items-center whitespace-nowrap transition-colors">
                   <span className="mr-2"><CheckIcon/></span> Validar stock
                 </button>
               </div>
@@ -312,6 +352,13 @@ export function PaginaVentaDirecta() {
                       </td>
                     </tr>
                   ))}
+                  {productos.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-gray-400 italic">
+                        No hay productos en el carrito. Agregue productos para comenzar la venta.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -326,16 +373,16 @@ export function PaginaVentaDirecta() {
             <div className="space-y-3 text-sm border-b border-gray-200 pb-4 mb-4">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium text-gray-900">S/ {subtotal.toFixed(2)}</span>
+                <span className="font-medium text-gray-900">S/ {totales.subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-red-500">
                 <span>Descuento</span>
-                <span>- S/ {descuento.toFixed(2)}</span>
+                <span>- S/ {descuentoApi.toFixed(2)}</span>
               </div>
             </div>
             <div className="flex justify-between items-center mb-4">
               <span className="font-bold text-gray-900 text-lg">Total a Pagar</span>
-              <span className="font-bold text-gray-900 text-xl">S/ {total.toFixed(2)}</span>
+              <span className="font-bold text-gray-900 text-xl">S/ {totales.total.toFixed(2)}</span>
             </div>
             <div className="pt-4 border-t border-gray-200">
               <label className="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
@@ -406,7 +453,14 @@ export function PaginaVentaDirecta() {
       <ConfirmCancelModal 
         isOpen={isCancelModalOpen} 
         onClose={() => setIsCancelModalOpen(false)} 
-        onConfirm={() => navigate(-1)} // Al confirmar, regresa a la página anterior
+        onConfirm={() => navigate(-1)} 
+      />
+
+      {/* MODAL DE CATÁLOGO (STEAM STYLE) */}
+      <ProductCatalogModal
+        isOpen={isCatalogOpen}
+        onClose={() => setIsCatalogOpen(false)}
+        onAddProduct={handleAddProductFromModal}
       />
 
     </div>
