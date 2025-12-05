@@ -97,6 +97,7 @@ export function PaginaVentaDirecta() {
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'TARJETA'>('EFECTIVO');
   const [numVenta, setNumVenta] = useState<string>('');
+  const [asignandoVendedor, setAsignandoVendedor] = useState(false);
 
   // --- Carga Inicial de Datos ---
   useEffect(() => {
@@ -199,6 +200,28 @@ export function PaginaVentaDirecta() {
   const handleEliminarCliente = () => {
     setClienteSeleccionado(null);
     setBusquedaCliente('');
+  };
+
+  const handleAsignarVendedor = async () => {
+    if (!validatedSeller || !ventaId) return;
+
+    try {
+      setAsignandoVendedor(true);
+      const response = await fetch(`${API_BASE_URL}/venta/${ventaId}/vendedor/${validatedSeller.sellerId}`, {
+        method: 'PUT',
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo asignar el vendedor');
+      }
+
+      alert('Vendedor asignado exitosamente');
+    } catch (e) {
+      console.error(e);
+      alert('Ocurrió un error al asignar el vendedor.');
+    } finally {
+      setAsignandoVendedor(false);
+    }
   };
 
   return (
@@ -447,8 +470,12 @@ export function PaginaVentaDirecta() {
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div className="flex justify-between items-center mb-2">
               <label className="text-sm font-medium text-gray-700">Asignar Vendedor</label>
-              <button className="text-xs bg-[#3C83F6] text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors">
-                Buscar vendedor
+              <button
+                onClick={handleAsignarVendedor}
+                disabled={!validatedSeller || asignandoVendedor}
+                className="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
+              >
+                {asignandoVendedor ? 'Asignando...' : 'Asignar Vendedor'}
               </button>
             </div>
             <input
