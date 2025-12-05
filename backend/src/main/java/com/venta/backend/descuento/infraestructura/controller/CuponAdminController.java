@@ -33,5 +33,53 @@ public class CuponAdminController {
         return ResponseEntity.ok(cuponAdminService.listarTodos());
     }
 
-    // ... (Faltarían los endpoints GET/{id}, PUT/{id}, DELETE/{id} usando el servicio)
+    /**
+     * Endpoint GET para obtener un cupón por su ID.
+     * URL: /api/admin/cupones/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<CuponResponse> obtenerCuponPorId(@PathVariable Long id) {
+        try {
+            CuponResponse response = cuponAdminService.obtenerPorId(id);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            // Si no se encuentra el recurso, se retorna 404 NOT FOUND (asumiendo que el servicio lanza una excepción)
+            return ResponseEntity.notFound().build(); 
+        }
+    }
+
+    /**
+     * Endpoint PUT para actualizar un cupón existente por su ID.
+     * URL: /api/admin/cupones/{id}
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<CuponResponse> actualizarCupon(@PathVariable Long id, @RequestBody CrearCuponRequest request) {
+        try {
+            CuponResponse response = cuponAdminService.actualizarCupon(id, request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            // Si el cupón no existe, 404 NOT FOUND. Si es un error de validación, 400 BAD REQUEST.
+            // Para simplificar, devolvemos 404 si el recurso no es encontrado.
+            if (e.getMessage() != null && e.getMessage().contains("no encontrado")) {
+                 return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    /**
+     * Endpoint DELETE para eliminar un cupón por su ID.
+     * URL: /api/admin/cupones/{id}
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarCupon(@PathVariable Long id) {
+        try {
+            cuponAdminService.eliminarCupon(id);
+            // 204 No Content es la respuesta RESTful correcta para una eliminación exitosa
+            return ResponseEntity.noContent().build(); 
+        } catch (RuntimeException e) {
+            // Si no se encuentra el recurso, se retorna 404 NOT FOUND
+            return ResponseEntity.notFound().build();
+        }
+    }    
 }
