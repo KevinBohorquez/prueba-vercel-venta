@@ -1,5 +1,8 @@
 package com.venta.backend.venta.application.servicios;
 
+import com.venta.backend.cliente.application.dto.request.RegistroClienteRequest;
+import com.venta.backend.cliente.application.dto.response.ClienteResponse;
+import com.venta.backend.cliente.application.servicios.IClienteAdminServicio;
 import com.venta.backend.venta.application.dto.request.CrearVentaLeadRequest;
 import com.venta.backend.venta.application.dto.response.VentaLeadResponse;
 import com.venta.backend.venta.entities.Venta;
@@ -11,16 +14,9 @@ import com.venta.backend.venta.infraestructura.repository.VentaRepositorio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +24,7 @@ public class VentaLeadService {
 
     private final VentaRepositorio ventaRepositorio;
     private final VentaLeadRepositorio ventaLeadRepositorio;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final IClienteAdminServicio clienteAdminServicio;
 
     @Transactional
     public VentaLeadResponse crearVentaDesdeLeadMarketing(CrearVentaLeadRequest request) {
@@ -45,6 +41,7 @@ public class VentaLeadService {
                 .origenVenta(OrigenVenta.LEAD)
                 .estado(VentaEstado.BORRADOR)
                 .fechaVentaCreada(LocalDate.now())
+                .clienteId(clienteId)
                 .subtotal(BigDecimal.ZERO)
                 .descuentoTotal(BigDecimal.ZERO)
                 .total(BigDecimal.ZERO)
@@ -78,31 +75,19 @@ public class VentaLeadService {
 
     private Long registrarCliente(CrearVentaLeadRequest request) {
         try {
-            // Preparar request para el endpoint de clientes
-            Map<String, Object> clienteRequest = new HashMap<>();
-            clienteRequest.put("dni", request.getDni());
-            clienteRequest.put("firstName", request.getNombres());
-            clienteRequest.put("lastName", request.getApellidos());
-            clienteRequest.put("email", request.getCorreo());
-            clienteRequest.put("phoneNumber", request.getTelefono());
+            // Crear request para el servicio de clientes
+            RegistroClienteRequest clienteRequest = RegistroClienteRequest.builder()
+                    .dni(request.getDni())
+                    .firstName(request.getNombres())
+                    .lastName(request.getApellidos())
+                    .email(request.getCorreo())
+                    .phoneNumber(request.getTelefono())
+                    .build();
             
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(clienteRequest, headers);
+            // Llamar directamente al servicio de clientes
+            ClienteResponse response = clienteAdminServicio.registrarCliente(clienteRequest);
             
-            // Llamar al endpoint de registro de clientes
-            ResponseEntity<Map> response = restTemplate.postForEntity(
-                    "http://localhost:8080/api/clientes/registroClientes",
-                    entity,
-                    Map.class
-            );
-            
-            Map<String, Object> responseBody = response.getBody();
-            if (responseBody != null && responseBody.containsKey("clienteId")) {
-                return ((Number) responseBody.get("clienteId")).longValue();
-            }
-            
-            throw new RuntimeException("No se pudo obtener el ID del cliente registrado");
+            return response.getClienteId();
             
         } catch (Exception e) {
             throw new RuntimeException("Error al registrar cliente: " + e.getMessage(), e);
