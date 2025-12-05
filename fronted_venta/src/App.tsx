@@ -10,11 +10,6 @@ import { PaginaVendedor } from "./paginas/PaginaVendedor"
 import { PaginaVentaDirecta } from "./paginas/PaginaVentaDirecta"
 import { PaginaVentaLead } from "./paginas/PaginaVentaLead"
 
-// --- NUEVAS IMPORTACIONES ---
-import { PaginaGestionProductos } from './modules/producto/pages/PaginaGestionProductos'; 
-import { PaginaCatalogoVendedor } from './modules/producto/pages/PaginaCatalogoVendedor'; 
-// ---------------------------
-
 function App() {
   const { role } = useRole();
 
@@ -24,34 +19,12 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<LayoutPrincipal />}>
-        {role === 'vendedor' && (
-          <>
-            {/* Rutas Principales del Vendedor */}
-            <Route index element={<PaginaVenta />} />
-            <Route path="registrar-venta" element={<PaginaVentaDirecta />} />
-            <Route path="registrar-venta-lead" element={<PaginaVentaLead />} />
-            <Route path="pagina-cotizacion" element={<PaginaCotizacion />} />
-            <Route path="pagina-cliente" element={<PaginaCliente />} />
-
-            {/* Nueva Ruta para el Catálogo de Vendedor */}
-            <Route path="catalogo-productos" element={<PaginaCatalogoVendedor />} />
-          </>
-        )}
-
-        {role === 'administrador' && (
-          <>
-            {/* Rutas Principales del Administrador */}
-            <Route index element={<PaginaVendedor />} /> {/* Página de inicio del Admin */}
-            <Route path="pagina-vendedor" element={<PaginaVendedor />} />
-            <Route path="pagina-cliente" element={<PaginaCliente />} />
-            
-            {/* Nueva Ruta para la Gestión de Productos del Administrador */}
-            <Route path="gestion-productos" element={<PaginaGestionProductos />} />
-          </>
-        )}
-        
-        {/* En caso de que haya login pero no se reconozca el rol */}
-        <Route path="*" element={<PaginaNoEncontrada />}></Route>
+        <Route index element={<PaginaVenta />} />
+        <Route path="registrar-venta" element={<PaginaVentaDirecta />} />
+        <Route path="registrar-venta-lead" element={<PaginaVentaLead />} />
+        <Route path="pagina-cotizacion" element={<PaginaCotizacion />} />
+        <Route path="pagina-cliente" element={<PaginaCliente />} />
+        <Route path="pagina-vendedor" element={<PaginaVendedor />} />
       </Route>
 
       <Route path="*" element={<PaginaNoEncontrada />}></Route>
