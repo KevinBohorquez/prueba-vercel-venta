@@ -3,6 +3,7 @@ package com.venta.backend.vendedor.application.impl;
 import com.venta.backend.vendedor.application.dto.request.RegistroVendedorRequest;
 import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrategy;
 import com.venta.backend.vendedor.application.exceptions.RegistroVendedorException;
+import com.venta.backend.vendedor.application.servicios.ISellerOnboardingService;
 import com.venta.backend.vendedor.enums.DocumentType;
 import com.venta.backend.vendedor.enums.SellerStatus;
 import com.venta.backend.vendedor.entities.Vendedor;
@@ -19,6 +20,7 @@ public class RegistroExternoStrategyImpl implements IRegistroVendedorStrategy {
 
     // Inyección de dependencias (el constructor lo pone Lombok)
     private final VendedorRepositorio vendedorRepositorio;
+    private final ISellerOnboardingService sellerOnboardingService;
 
     @Override
     public void validateData(RegistroVendedorRequest request) {
@@ -46,7 +48,7 @@ public class RegistroExternoStrategyImpl implements IRegistroVendedorStrategy {
 
     @Override
     public Vendedor createSellerEntity(RegistroVendedorRequest request) {
-        return Vendedor.builder()
+        Vendedor newVendeor = Vendedor.builder()
                 .dni(request.getDni())
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -61,5 +63,12 @@ public class RegistroExternoStrategyImpl implements IRegistroVendedorStrategy {
                 .bankName(request.getBankName())
                 .documentType(request.getDocumentType() != null ? request.getDocumentType() : DocumentType.DNI)
                 .build();
+
+        // OnboardingService se encargará de enviar el email de bienvenida
+        sellerOnboardingService.onboardSeller(newVendeor);
+
+        
+
+        return newVendeor;
     }
 }
