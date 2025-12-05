@@ -37,4 +37,18 @@ public interface VendedorRepositorio extends JpaRepository<Vendedor, Long>, JpaS
     @Query("SELECT COUNT(v) FROM Vendedor v WHERE v.sellerBranch.branchId = :branchId AND v.sellerStatus = 'ACTIVE'")
     Long countActiveSellersByBranch(@Param("branchId") Long branchId);
 
+    /**
+     * Busca un vendedor por su ID de empleado de RRHH.
+     * @param employeeRrhhId El ID de empleado RRHH a buscar.
+     * @return Un Optional que puede contener al Vendedor.
+     */
+    Optional<Vendedor> findByEmployeeRrhhId(Long employeeRrhhId);
+
+    /**
+     * Verifica si ya existe un vendedor con un RUC específico.
+     * @param ruc El RUC a verificar.
+     * @return true si el RUC ya existe, false de lo contrario.
+     */
+    boolean existsByRuc(String ruc);
+
 }

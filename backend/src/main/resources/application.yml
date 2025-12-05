@@ -33,5 +33,5 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
     # Usar especificación OpenAPI personalizada
-    url: /openapi.yml
+    #url: /openapi.yml
   show-actuator: false

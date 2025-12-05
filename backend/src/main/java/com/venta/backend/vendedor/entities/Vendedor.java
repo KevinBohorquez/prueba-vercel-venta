@@ -53,10 +53,10 @@ public class Vendedor {
     private SellerStatus sellerStatus;
 
 
-    @Column(name = "employee_rrhh_id")
+    @Column(name = "employee_rrhh_id", unique = true)
     private Long employeeRrhhId; // ID del trabajador en el módulo de RRHH
 
-    // Para vendedores EXTERNOS que tienen RUC (persona jurídica)
+    // Para vendedores EXTERNOS que tienen RUC
     @Column(length = 11, unique = true)
     private String ruc; // Solo para vendedores externos con factura
 
@@ -67,7 +67,6 @@ public class Vendedor {
     @Column(length = 50)
     private String bankName; // Nombre del banco
 
-    // Tipo de documento de identidad (por si hay extranjeros)
     @Enumerated(EnumType.STRING)
     @Column(name = "id_document_type")
     private DocumentType documentType; // DNI, CE, PASAPORTE

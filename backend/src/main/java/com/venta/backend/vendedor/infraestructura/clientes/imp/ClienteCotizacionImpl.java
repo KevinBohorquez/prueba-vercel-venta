@@ -1,32 +1,35 @@
 package com.venta.backend.vendedor.infraestructura.clientes.imp;
 
+import com.venta.backend.cotizacion.model.CotizacionEstado;
+import com.venta.backend.cotizacion.repository.CotizacionRepository;
 import com.venta.backend.vendedor.infraestructura.clientes.IClienteCotizacion;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
- * Implementación SIMULADA del cliente Cotización
- * En producción, verificaría en el módulo de cotizaciones
+ * Esta clase implementa el contrato IClienteCotizacion (Service Proxy local)
+ * para mantener la separación lógica de módulos.
  */
 @Component
+@RequiredArgsConstructor
 public class ClienteCotizacionImpl implements IClienteCotizacion {
+
+    private final CotizacionRepository cotizacionRepository;
 
     @Override
     public boolean hasPendingQuotations(Long sellerId) {
-        // SIMULACIÓN: En producción haría una llamada HTTP
-        // GET http://cotizacion-service/api/cotizaciones/pendientes?vendedorId={sellerId}
+        List<CotizacionEstado> pendingStatuses = Arrays.asList(
+                CotizacionEstado.BORRADOR,
+                CotizacionEstado.ENVIADA
+        );
 
-        // Para testing, simula que algunos vendedores tienen cotizaciones pendientes
-        // Por ahora, retornamos false para permitir todas las desactivaciones
-        return false;
+        String sellerCode = String.valueOf(sellerId);
 
-        // Ejemplo de lógica real:
-        // try {
-        //     String url = cotizacionServiceUrl + "/api/cotizaciones/pendientes?vendedorId=" + sellerId;
-        //     ResponseEntity<Boolean> response = restTemplate.getForEntity(url, Boolean.class);
-        //     return response.getBody() != null && response.getBody();
-        // } catch (Exception e) {
-        //     // Si hay error en la comunicación, asumimos que no hay pendientes
-        //     return false;
-        // }
+        long pendingCount = cotizacionRepository.countBySellerCodeAndEstadoIn(sellerCode, pendingStatuses);
+
+        return pendingCount > 0;
     }
 }

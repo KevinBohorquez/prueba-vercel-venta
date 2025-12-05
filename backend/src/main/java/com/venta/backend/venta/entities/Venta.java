@@ -41,6 +41,12 @@ public class Venta {
     @Column(name = "fecha_venta_completada")
     private LocalDate fechaVentaCompletada;
 
+    @Column(name = "cliente_id")
+    private Long clienteId;
+
+    @Column(name = "id_vendedor")
+    private Long idVendedor;
+
     @Column(nullable = false)
     private BigDecimal subtotal;
 
@@ -82,6 +88,10 @@ public class Venta {
         this.subtotal = nuevoSubtotal;
         this.descuentoTotal = BigDecimal.ZERO;
         this.total = nuevoSubtotal;
+    }
+
+    public BigDecimal calcularTotal() {
+        return BigDecimal.valueOf(1000.00); 
     }
 }
 

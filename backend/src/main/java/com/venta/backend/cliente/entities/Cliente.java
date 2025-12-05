@@ -21,7 +21,7 @@ public class Cliente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long clienteId;
 
-    @Column(nullable = false, unique = true, length = 8)
+    @Column(unique = true, length = 8)
     private String dni;
 
     @Column(nullable = false)
@@ -36,7 +36,12 @@ public class Cliente {
     @Column(length = 15)
     private String phoneNumber;
 
+    @Column(length = 15)
+    private String telefonoFijo;
+
     private String address;
+
+    private LocalDate fechaNacimiento;
 
     @Column(nullable = false, updatable = false)
     private LocalDate registrationDate;

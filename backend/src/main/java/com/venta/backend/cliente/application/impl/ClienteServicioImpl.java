@@ -46,8 +46,9 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
     @Override
     @Transactional
     public ClienteResponse registrarCliente(RegistroClienteRequest request) {
-        // Validar que el DNI no exista
-        if (clienteRepositorio.existsByDni(request.getDni())) {
+        // Validar que el DNI no exista (solo si el DNI no es null)
+        if (request.getDni() != null && !request.getDni().trim().isEmpty() 
+                && clienteRepositorio.existsByDni(request.getDni())) {
             throw new RegistroClienteException("Ya existe un cliente con el DNI: " + request.getDni());
         }
 
@@ -70,7 +71,9 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
+                .telefonoFijo(request.getTelefonoFijo())
                 .address(request.getAddress())
+                .fechaNacimiento(request.getFechaNacimiento())
                 .registrationDate(LocalDate.now())
                 .estado(EstadoClienteEnum.ACTIVO)
                 .categoria("Estándar") // Categoría inicial
@@ -86,7 +89,19 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
     public ClienteResponse actualizarCliente(Long clienteId, ModificacionClienteRequest request) {
         Cliente cliente = findClienteEntityById(clienteId);
 
-        // Actualizar campos permitidos
+        // Actualizar campos permitidos (todos excepto clienteId que es la identidad)
+        if (request.getDni() != null) {
+            // Validar que el DNI no esté en uso por otro cliente (solo si no es null)
+            if (!request.getDni().trim().isEmpty() 
+                    && clienteRepositorio.existsByDni(request.getDni()) 
+                    && !cliente.getDni().equals(request.getDni())) {
+                throw new RegistroClienteException("Ya existe un cliente con el DNI: " + request.getDni());
+            }
+            cliente.setDni(request.getDni());
+        }
+        if (request.getFirstName() != null) {
+            cliente.setFirstName(request.getFirstName());
+        }
         if (request.getLastName() != null) {
             cliente.setLastName(request.getLastName());
         }
@@ -101,8 +116,14 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
         if (request.getPhoneNumber() != null) {
             cliente.setPhoneNumber(request.getPhoneNumber());
         }
+        if (request.getTelefonoFijo() != null) {
+            cliente.setTelefonoFijo(request.getTelefonoFijo());
+        }
         if (request.getAddress() != null) {
             cliente.setAddress(request.getAddress());
+        }
+        if (request.getFechaNacimiento() != null) {
+            cliente.setFechaNacimiento(request.getFechaNacimiento());
         }
         if (request.getEstado() != null) {
             cliente.changeStatus(request.getEstado());
@@ -116,28 +137,32 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
     @Override
     @Transactional
     public ClienteIdResponse crearClienteSimple(CrearClienteSimpleRequest request) {
-        // Validar que el DNI no exista
-        if (clienteRepositorio.existsByDni(request.getDni())) {
-            Cliente clienteExistente = clienteRepositorio.findByDni(request.getDni())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado"));
-            return ClienteIdResponse.builder()
-                    .clienteId(clienteExistente.getClienteId())
-                    .build();
-        }
+        // Validar que el DNI no exista (solo si se proporciona DNI)
+        if (request.getDni() != null && !request.getDni().isBlank()) {
+            if (clienteRepositorio.existsByDni(request.getDni())) {
+                Cliente clienteExistente = clienteRepositorio.findByDni(request.getDni())
+                        .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado"));
+                return ClienteIdResponse.builder()
+                        .clienteId(clienteExistente.getClienteId())
+                        .build();
+            }
 
-        // Validar elegibilidad básica
-        if (!clienteValidacion.esClienteApto(request.getDni())) {
-            String motivo = clienteValidacion.obtenerMotivoRestriccion(request.getDni());
-            throw new ClienteNoAptoException(motivo);
+            // Validar elegibilidad básica (solo si se proporciona DNI)
+            if (!clienteValidacion.esClienteApto(request.getDni())) {
+                String motivo = clienteValidacion.obtenerMotivoRestriccion(request.getDni());
+                throw new ClienteNoAptoException(motivo);
+            }
         }
 
         // Crear cliente simplificado
         Cliente nuevoCliente = Cliente.builder()
-                .dni(request.getDni())
+                .dni(request.getDni() != null && !request.getDni().isBlank() ? request.getDni() : null)
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
+                .telefonoFijo(request.getTelefonoFijo())
+                .fechaNacimiento(request.getFechaNacimiento())
                 .registrationDate(LocalDate.now())
                 .estado(EstadoClienteEnum.ACTIVO)
                 .categoria("Estándar")
@@ -210,19 +235,35 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
     @Transactional(readOnly = true)
     public PageMarketingClienteResponse obtenerDatosParaMarketing(Pageable pageable) {
         Page<Cliente> clientePage = clienteRepositorio.findAll(pageable);
+        java.time.LocalDate hoy = java.time.LocalDate.now();
 
         List<PageMarketingClienteResponse.ClienteMarketingDTO> clientesMarketing = clientePage.getContent().stream()
-                .map(cliente -> PageMarketingClienteResponse.ClienteMarketingDTO.builder()
-                        .clienteId(cliente.getClienteId())
-                        .dni(cliente.getDni())
-                        .fullName(cliente.getFullName())
-                        .email(cliente.getEmail())
-                        .categoria(cliente.getCategoria())
-                        .estado(cliente.getEstado().name())
-                        .recencyScore(0) // TODO: Calcular desde historial de compras
-                        .frequencyScore(0) // TODO: Calcular desde historial de compras
-                        .monetaryScore(java.math.BigDecimal.ZERO) // TODO: Calcular desde historial de compras
-                        .build())
+                .map(cliente -> {
+                    // Calcular edad si existe fechaNacimiento
+                    Integer edad = null;
+                    if (cliente.getFechaNacimiento() != null) {
+                        edad = java.time.Period.between(cliente.getFechaNacimiento(), hoy).getYears();
+                    }
+
+                    // Obtener ubicación desde address (si existe)
+                    String ubicacion = cliente.getAddress();
+
+                    // Los scores se dejan como null si no hay datos de compras
+                    // TODO: Calcular desde historial de compras cuando esté disponible
+                    return PageMarketingClienteResponse.ClienteMarketingDTO.builder()
+                            .clienteId(cliente.getClienteId())
+                            .dni(cliente.getDni())
+                            .fullName(cliente.getFullName())
+                            .email(cliente.getEmail())
+                            .categoria(cliente.getCategoria())
+                            .estado(cliente.getEstado().name())
+                            .recencyScore(null) // Se calculará desde historial de compras cuando esté disponible
+                            .frequencyScore(null) // Se calculará desde historial de compras cuando esté disponible
+                            .monetaryScore(null) // Se calculará desde historial de compras cuando esté disponible
+                            .ubicacion(ubicacion)
+                            .edad(edad)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         return PageMarketingClienteResponse.builder()
@@ -254,6 +295,65 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
                 .tieneDeuda(tieneDeuda)
                 .puedeComprar(puedeComprar)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClienteResponse obtenerClientePorId(Long clienteId) {
+        Cliente cliente = findClienteEntityById(clienteId);
+        return clienteMapeador.toClienteResponse(cliente);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClienteResponse obtenerClientePorDni(String dni) {
+        Cliente cliente = clienteRepositorio.findByDni(dni)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con DNI: " + dni));
+        return clienteMapeador.toClienteResponse(cliente);
+    }
+
+    @Override
+    @Transactional
+    public ClienteResponse actualizarClientePorDni(String dni, ModificacionClienteRequest request) {
+        Cliente cliente = clienteRepositorio.findByDni(dni)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con DNI: " + dni));
+        
+        // Actualizar campos si están presentes en el request (mismo patrón que actualizarCliente)
+        if (request.getDni() != null) {
+            cliente.setDni(request.getDni());
+        }
+        if (request.getFirstName() != null) {
+            cliente.setFirstName(request.getFirstName());
+        }
+        if (request.getLastName() != null) {
+            cliente.setLastName(request.getLastName());
+        }
+        if (request.getEmail() != null) {
+            // Validar que el email no esté en uso por otro cliente
+            if (clienteRepositorio.existsByEmail(request.getEmail()) 
+                    && !cliente.getEmail().equals(request.getEmail())) {
+                throw new RegistroClienteException("Ya existe un cliente con el email: " + request.getEmail());
+            }
+            cliente.setEmail(request.getEmail());
+        }
+        if (request.getPhoneNumber() != null) {
+            cliente.setPhoneNumber(request.getPhoneNumber());
+        }
+        if (request.getTelefonoFijo() != null) {
+            cliente.setTelefonoFijo(request.getTelefonoFijo());
+        }
+        if (request.getAddress() != null) {
+            cliente.setAddress(request.getAddress());
+        }
+        if (request.getFechaNacimiento() != null) {
+            cliente.setFechaNacimiento(request.getFechaNacimiento());
+        }
+        if (request.getEstado() != null) {
+            cliente.changeStatus(request.getEstado());
+        }
+
+        Cliente clienteActualizado = clienteRepositorio.save(cliente);
+        return clienteMapeador.toClienteResponse(clienteActualizado);
     }
 
     // ========== MÉTODOS PRIVADOS AUXILIARES ==========

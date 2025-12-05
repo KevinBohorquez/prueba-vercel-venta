@@ -5,7 +5,7 @@ import TypePill from "./TypePill";
 // Asegúrate de importar SellerTableProps y SellerStatus desde el archivo corregido
 import { type SellerTableProps, SellerStatus } from "../types/seller.types";
 
-const SellerTable = ({ sellers }: SellerTableProps) => (
+const SellerTable = ({ sellers, onDeactivate, onActivate, onEdit }: SellerTableProps) => (
   <div className="overflow-x-auto">
     <table className="min-w-full divide-y divide-gray-200">
       {/* Encabezados de la Tabla */}
@@ -41,12 +41,37 @@ const SellerTable = ({ sellers }: SellerTableProps) => (
               <StatusPill status={seller.status} />
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
-              <a href="#" className="text-blue-600 hover:text-blue-800">Editar</a>
+              <button
+                  onClick={(e) => {
+                      e.preventDefault();
+                      // Llamamos a onEdit, convirtiendo el ID de vuelta a número
+                      onEdit(Number(seller.id));
+                  }}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Editar
+              </button>
 
               {seller.status === SellerStatus.Activo ? (
-                <a href="#" className="text-red-600 hover:text-red-800">Desactivar</a>
+                <button
+                  onClick={(e) => {
+                      e.preventDefault();
+                      onDeactivate(Number(seller.id)); // Convertir el ID de vuelta a número
+                  }}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  Desactivar
+                </button>
               ) : (
-                <a href="#" className="text-green-600 hover:text-green-800">Reactivar</a>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onActivate(Number(seller.id));
+                  }}
+                  className="text-green-600 hover:text-green-800"
+                >
+                  Reactivar
+            </button>
               )}
             </td>
           </tr>
