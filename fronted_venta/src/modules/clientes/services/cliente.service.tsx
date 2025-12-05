@@ -1,4 +1,4 @@
-import { ClienteResponse, ModificacionClienteRequest } from '../types/cliente.types';
+import { type ClienteResponse, type ModificacionClienteRequest } from '../types/cliente.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ModalEditarCliente } from '../modules/clientes/components/ModalEditarCliente';
-import { ClienteResponse } from '../modules/clientes/types/cliente.types';
+import type { ClienteResponse } from '../modules/clientes/types/cliente.types';
 import { obtenerClientePorId } from '../modules/clientes/services/cliente.service';
 
 export function PaginaCliente() {
