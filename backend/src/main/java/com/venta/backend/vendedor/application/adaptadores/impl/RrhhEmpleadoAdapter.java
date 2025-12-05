@@ -1,6 +1,6 @@
 package com.venta.backend.vendedor.application.adaptadores.impl;
 
-import com.venta.backend.vendedor.application.adaptadores.IAdaptadorEmpleado;
+import com.venta.backend.vendedor.application.adaptadores.IEmpleadoAdapter;
 import com.venta.backend.vendedor.entities.Vendedor;
 import com.venta.backend.vendedor.enums.DocumentType;
 import com.venta.backend.vendedor.enums.SellerStatus;
@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 
 @Component
-public class RRHHAdaptadorImpl implements IAdaptadorEmpleado {
+public class RrhhEmpleadoAdapter implements IEmpleadoAdapter {
     @Override
     public Vendedor adaptar(EmpleadoRRHHDTO empleadoDTO) {
 
         String lastName = empleadoDTO.getApellidoPaterno() + " " + empleadoDTO.getApellidoMaterno();
 
         return Vendedor.builder()
-                // 🚨 Mapeo de campos
+                // Mapeo de campos
                 .dni(empleadoDTO.getDocumentoIdentidad())
                 .firstName(empleadoDTO.getNombres())
                 .lastName(lastName)
@@ -25,11 +25,11 @@ public class RRHHAdaptadorImpl implements IAdaptadorEmpleado {
                 .phoneNumber(empleadoDTO.getTelefono())
                 .address(empleadoDTO.getDireccion())
 
-                // Asignaciones internas por defecto:
+                // Asignaciones internas por defecto
                 .sellerStatus(SellerStatus.ACTIVE)
                 .registrationDate(LocalDate.now())
 
-                // 🚨 Mapeo del ID de Referencia
+                // Mapeo del ID de Referencia
                 .employeeRrhhId(empleadoDTO.getIdEmpleado())
 
                 .documentType(DocumentType.DNI)

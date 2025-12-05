@@ -1,6 +1,6 @@
 package com.venta.backend.vendedor.application.impl;
 
-import com.venta.backend.vendedor.application.adaptadores.IAdaptadorEmpleado;
+import com.venta.backend.vendedor.application.adaptadores.IEmpleadoAdapter;
 import com.venta.backend.vendedor.application.dto.request.RegistroVendedorRequest;
 import com.venta.backend.vendedor.application.estrategias.IRegistroVendedorStrategia;
 import com.venta.backend.vendedor.application.exceptions.RecursoNoEncontradoException;
@@ -18,7 +18,7 @@ public class RegistroInternoStrategiaImpl implements IRegistroVendedorStrategia 
 
     private final VendedorRepositorio vendedorRepositorio;
     private final IClienteRRHH clienteRRHH;
-    private final IAdaptadorEmpleado adaptadorEmpleado;
+    private final IEmpleadoAdapter adaptadorEmpleado;
 
     @Override
     public void validateData(RegistroVendedorRequest request) {
