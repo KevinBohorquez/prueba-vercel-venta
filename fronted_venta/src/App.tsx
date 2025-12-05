@@ -10,23 +10,48 @@ import { PaginaVendedor } from "./paginas/PaginaVendedor"
 import { PaginaVentaDirecta } from "./paginas/PaginaVentaDirecta"
 import { PaginaVentaLead } from "./paginas/PaginaVentaLead"
 
+// --- NUEVAS IMPORTACIONES ---
+import { PaginaGestionProductos } from './modules/producto/pages/PaginaGestionProductos'; 
+import { PaginaCatalogoVendedor } from './modules/producto/pages/PaginaCatalogoVendedor'; 
+// ---------------------------
+
 function App() {
   const { role } = useRole();
 
   if (!role) return <Login />;
 
+  // Se ha cambiado la estructura para usar rutas anidadas y controlar el rol de forma más limpia.
   return (
-    // Si agregan lo de producto y descuento como página
-    // Tendría que modificarlo en el LayoutPrincipal.tsx para agregar los links si va para vendedor o admin
-    // Y dentro de esta Route agregan las rutas respectivas
     <Routes>
       <Route path="/" element={<LayoutPrincipal />}>
-        <Route index element={<PaginaVenta />} />
-        <Route path="registrar-venta" element={<PaginaVentaDirecta />} />
-        <Route path="registrar-venta-lead" element={<PaginaVentaLead />} />
-        <Route path="pagina-cotizacion" element={<PaginaCotizacion />} />
-        <Route path="pagina-cliente" element={<PaginaCliente />} />
-        <Route path="pagina-vendedor" element={<PaginaVendedor />} />
+        {role === 'vendedor' && (
+          <>
+            {/* Rutas Principales del Vendedor */}
+            <Route index element={<PaginaVenta />} />
+            <Route path="registrar-venta" element={<PaginaVentaDirecta />} />
+            <Route path="registrar-venta-lead" element={<PaginaVentaLead />} />
+            <Route path="pagina-cotizacion" element={<PaginaCotizacion />} />
+            <Route path="pagina-cliente" element={<PaginaCliente />} />
+
+            {/* Nueva Ruta para el Catálogo de Vendedor */}
+            <Route path="catalogo-productos" element={<PaginaCatalogoVendedor />} />
+          </>
+        )}
+
+        {role === 'administrador' && (
+          <>
+            {/* Rutas Principales del Administrador */}
+            <Route index element={<PaginaVendedor />} /> {/* Página de inicio del Admin */}
+            <Route path="pagina-vendedor" element={<PaginaVendedor />} />
+            <Route path="pagina-cliente" element={<PaginaCliente />} />
+            
+            {/* Nueva Ruta para la Gestión de Productos del Administrador */}
+            <Route path="gestion-productos" element={<PaginaGestionProductos />} />
+          </>
+        )}
+        
+        {/* En caso de que haya login pero no se reconozca el rol */}
+        <Route path="*" element={<PaginaNoEncontrada />}></Route>
       </Route>
 
       <Route path="*" element={<PaginaNoEncontrada />}></Route>

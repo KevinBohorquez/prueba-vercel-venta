@@ -4,6 +4,8 @@ import SellerTable from '../components/SellerTable';
 import { SellerType, SellerStatus } from '../types/seller.types';
 import type { VendedorResponse } from '../types/Vendedor';
 import { CreateSellerModal } from '../components/CreateSellerModal';
+import { CreateComboModal } from '../components/CreateComboModal';
+import { useRole } from '../contexts/RoleContext';
 
 type TabId = 'vendedores' | 'sedes';
 
@@ -22,6 +24,10 @@ export function PaginaVendedor() {
   // Empieza con la pestaña de vendedores
   const [activeTab, setActiveTab] = useState<TabId>('vendedores');
 
+  // Obtener rol del usuario
+  const { role } = useRole();
+  const isAdmin = role === 'administrador';
+
   // 2. Usar el tipo VendedorResponse para el estado
   const [sellers, setSellers] = useState<VendedorResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,8 +42,9 @@ export function PaginaVendedor() {
     status: vendedor.sellerStatus === 'ACTIVE' ? SellerStatus.Activo : SellerStatus.Inactivo,
   }));
 
-  // Estado para el modal de creación
+  // Estado para los modales
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateComboModalOpen, setIsCreateComboModalOpen] = useState(false);
 
   const tabs = [
     { id: 'vendedores', label: 'Vendedores' },
@@ -79,6 +86,11 @@ export function PaginaVendedor() {
   fetchSellers(); // Refrescar la lista de vendedores
   };
 
+  const handleComboSaveSuccess = () => {
+    setIsCreateComboModalOpen(false); // Cerrar el modal
+    // Podrías refrescar una lista de combos aquí si fuera necesario
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-lg">
@@ -116,16 +128,18 @@ export function PaginaVendedor() {
 
         {/* 3. Contenido Principal (basado en la pestaña activa) */}
         <div>
-          {/* Contenido de la pestaña VENDEDORES */}
-          {activeTab === 'vendedores' && (
-            <div>
-              <SellerToolbar
-                onNewSellerClick={() => {
-                  setIsCreateModalOpen(true);
-                }}
-              />
-
-              {isLoading && <p className='py-4 text-center text-gray-600'>Cargando vendedores desde el backend...</p>}
+          {/* Contenido de la pestaña VENDEDORES */}
+          {activeTab === 'vendedores' && (
+            <div>
+              <SellerToolbar
+                onNewSellerClick={() => {
+                  setIsCreateModalOpen(true);
+                }}
+                onCreateComboClick={() => {
+                  setIsCreateComboModalOpen(true);
+                }}
+                isAdmin={isAdmin}
+              />              {isLoading && <p className='py-4 text-center text-gray-600'>Cargando vendedores desde el backend...</p>}
              
               {error && (
                 <div className='p-4 my-4 bg-red-100 text-red-700 rounded-md'>
@@ -150,13 +164,22 @@ export function PaginaVendedor() {
         </div>
       </div>
 
-      {isCreateModalOpen && (
-        <CreateSellerModal
-          onClose={() => setIsCreateModalOpen(false)}
-          onSaveSuccess={handleSaveSuccess}
+      {isCreateModalOpen && (
+        <CreateSellerModal
+          onClose={() => setIsCreateModalOpen(false)}
+          onSaveSuccess={handleSaveSuccess}
           apiBaseUrl={API_BASE_URL}
-        />
-      )}
-    </div>
-  );
+        />
+      )}
+
+      {isCreateComboModalOpen && (
+        <CreateComboModal
+          isOpen={isCreateComboModalOpen}
+          onClose={() => setIsCreateComboModalOpen(false)}
+          onSaveSuccess={handleComboSaveSuccess}
+          apiBaseUrl={API_BASE_URL}
+        />
+      )}
+    </div>
+  );
 }
