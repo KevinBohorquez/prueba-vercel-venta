@@ -65,8 +65,6 @@ public class RegistroExternoStrategyImpl implements IRegistroVendedorStrategy {
         // OnboardingService se encargará de enviar el email de bienvenida
         sellerOnboardingService.onboardSeller(newVendeor);
 
-
-
         return newVendeor;
     }
 }

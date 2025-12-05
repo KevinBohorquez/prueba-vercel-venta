@@ -141,16 +141,15 @@ public class VendedorServicioImpl implements IVendedorAdminService, IVendedorCon
     @Transactional(readOnly = true)
     public Page<VendedorResponse> searchSellers(SellerType sellerType, SellerStatus sellerStatus,
                                                 Long sellerBranchId, String dni, Pageable pageable) {
-        // 1. Usar nuestro helper para construir la consulta dinámica
+        //  Usar nuestro helper para construir la consulta dinámica
         Specification<Vendedor> spec = VendedorEspecificacion.buildSpecification(
                 sellerType, sellerStatus, sellerBranchId, dni
         );
 
-        // 2. Ejecutar la consulta con paginación
+        //  Ejecutar la consulta con paginación
         Page<Vendedor> vendedorPage = vendedorRepositorio.findAll(spec, pageable);
 
-        // 3. Mapear la página de Entidades a una página de DTOs
-        // (vendedorMapeador::toVendedorResponse es un atajo para v -> vendedorMapeador.toVendedorResponse(v))
+        // Mapear la página de Entidades a una página de DTOs
         return vendedorPage.map(vendedorMapeador::toVendedorResponse);
     }
 
