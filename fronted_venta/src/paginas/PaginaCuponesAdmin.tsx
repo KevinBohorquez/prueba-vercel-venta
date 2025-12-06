@@ -4,10 +4,35 @@ import React, { useState, useEffect, useCallback } from 'react';
 import CrearCuponForm from '../modules/descuentos/components/CrearCuponForm';
 import { listarTodosLosCupones, eliminarCupon } from '../modules/descuentos/services/cupon.service';
 import type { CuponResponse } from '../modules/descuentos/types/cupon.types';
-import { Plus, Trash2, Edit, X } from 'lucide-react'; // Asumiendo que Lucide es tu librería de iconos
+import { Plus, Trash2, Edit, X } from 'lucide-react'; 
 
-// --- Componente Local de la Tabla de Cupones (Simplificado) ---
-// En un proyecto real, esto debería estar en un archivo aparte (CuponTable.tsx)
+// -----------------------------------------------------
+// 1. Modal Componente (Asegurando el centrado y el overlay)
+// -----------------------------------------------------
+const Modal: React.FC<{ children: React.ReactNode, title: string, onClose: () => void }> = ({ children, title, onClose }) => (
+  // Fondo oscuro que cubre toda la pantalla (overlay)
+  <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 sm:p-8">
+    {/* Contenedor principal del modal */}
+    <div className="relative bg-white rounded-xl max-w-4xl w-full mx-auto shadow-2xl">
+      {/* Header del Modal */}
+      <div className="p-6 border-b flex justify-between items-center">
+        <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition duration-150">
+          <X size={24} />
+        </button>
+      </div>
+      {/* Contenido del Modal (Aquí se renderiza el formulario) */}
+      <div className="p-6">
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
+
+// -----------------------------------------------------
+// 2. Componente de Tabla (CuponTable)
+// -----------------------------------------------------
 interface CuponTableProps {
   cupones: CuponResponse[];
   onEdit: (cupon: CuponResponse) => void;
@@ -62,7 +87,9 @@ const CuponTable: React.FC<CuponTableProps> = ({ cupones, onEdit, onDelete }) =>
 );
 
 
-// --- Componente Principal ---
+// -----------------------------------------------------
+// 3. Componente Principal (PaginaCuponesAdmin)
+// -----------------------------------------------------
 const PaginaCuponesAdmin = () => {
   const [cupones, setCupones] = useState<CuponResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -163,7 +190,8 @@ const PaginaCuponesAdmin = () => {
               <CrearCuponForm
                   onSuccess={handleSaveSuccess}
                   onCancel={handleCloseModal}
-                  cuponDataToEdit={cuponToEdit}
+                  // Pasamos el cupón a editar o null/undefined
+                  cuponDataToEdit={cuponToEdit} 
               />
           </Modal>
       )}
@@ -172,23 +200,3 @@ const PaginaCuponesAdmin = () => {
 };
 
 export default PaginaCuponesAdmin;
-
-// --- Modal Básico (Necesario para envolver el formulario, asume que no tienes uno global) ---
-// Puedes mover esto a src/components/Modal.tsx si es necesario
-const Modal: React.FC<{ children: React.ReactNode, title: string, onClose: () => void }> = ({ children, title, onClose }) => (
-  <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75 flex items-center justify-center p-4">
-    <div className="relative bg-white rounded-xl max-w-2xl w-full mx-auto shadow-2xl">
-      {/* Header del Modal */}
-      <div className="p-5 border-b flex justify-between items-center">
-        <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-          <X size={24} />
-        </button>
-      </div>
-      {/* Contenido del Modal */}
-      <div className="p-5">
-        {children}
-      </div>
-    </div>
-  </div>
-);
