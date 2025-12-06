@@ -214,7 +214,8 @@ public class VentaController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void confirmarVenta(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
         ventaCarritoService.confirmarVenta(ventaId);
-
+    }
+    
     @Operation(summary = "Obtener ventas agregadas por canal (Físico vs. Llamada)")
     @GetMapping("/analisis/ventas-por-canal")
     public ResponseEntity<List<VentasPorCanalResponse>> obtenerVentasPorCanal() {
