@@ -51,6 +51,10 @@ const SellerDisplayWidget: React.FC<SellerDisplayProps> = ({
           } else if (response.status === 400) {
             // Error de negocio: Inactivo
             setStatusText(`INACTIVO: ${errorData.message}`);
+          } else if (response.status === 500) {
+            // Muestra el mensaje de la excepción de negocio envuelta por Spring
+            const message = errorData.message.replace('Ocurrió un error inesperado: ', '');
+            setStatusText(`ERROR (500): ${message}`);
           } else {
             setStatusText(`Error ${response.status} del servidor.`);
           }
