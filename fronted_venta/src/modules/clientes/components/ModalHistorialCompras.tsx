@@ -77,6 +77,16 @@ export function ModalHistorialCompras({ cliente, compras, onClose }: Props) {
             <p className="text-sm text-gray-500">{cliente.fullName} · DNI/RUC: {cliente.dni}</p>
           </div>
           <div className="flex items-center gap-2">
+            {cliente.categoria && (
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${cliente.categoria === 'PLATINO'
+                  ? 'bg-purple-100 text-purple-700'
+                  : cliente.categoria === 'VIP'
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-blue-100 text-blue-700'
+                }`}>
+                {cliente.categoria}
+              </span>
+            )}
             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${cliente.estado === 'INACTIVO' ? 'bg-gray-100 text-gray-700' : 'bg-green-100 text-green-700'}`}>
               {cliente.estado === 'INACTIVO' ? 'Inactivo' : 'Activo'}
             </span>

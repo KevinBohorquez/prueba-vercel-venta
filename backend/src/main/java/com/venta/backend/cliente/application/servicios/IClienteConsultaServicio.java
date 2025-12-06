@@ -1,5 +1,6 @@
 package com.venta.backend.cliente.application.servicios;
 
+import com.venta.backend.cliente.application.dto.response.ClienteActivoResponse;
 import com.venta.backend.cliente.application.dto.response.ClienteResponse;
 import com.venta.backend.cliente.application.dto.response.ClienteVentaDTO;
 import com.venta.backend.cliente.application.dto.response.HistorialComprasResponse;
@@ -7,6 +8,8 @@ import com.venta.backend.cliente.application.dto.response.PageClienteResponse;
 import com.venta.backend.cliente.application.dto.response.PageMarketingClienteResponse;
 import com.venta.backend.cliente.enums.EstadoClienteEnum;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 /**
  * Interfaz para servicios de consulta de clientes.
@@ -67,5 +70,14 @@ public interface IClienteConsultaServicio {
      * @return Un ClienteResponse con los datos del cliente.
      */
     ClienteResponse obtenerClientePorDni(String dni);
+
+    /**
+     * Obtiene lista de todos los clientes activos.
+     * Usado para integración con módulo de Ventas.
+     *
+     * @return Lista de clientes activos con clienteId, firstName y lastName.
+     */
+    List<ClienteActivoResponse> obtenerClientesActivos();
 }
+
 
