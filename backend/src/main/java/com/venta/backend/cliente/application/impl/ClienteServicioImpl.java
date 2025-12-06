@@ -246,10 +246,25 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
                     }
 
                     // Obtener ubicación desde address (si existe)
-                    String ubicacion = cliente.getAddress();
+                    String ubicacion = cliente.getAddress() != null && !cliente.getAddress().isBlank() 
+                            ? cliente.getAddress() 
+                            : "No especificada";
 
-                    // Los scores se dejan como null si no hay datos de compras
+                    // Calcular scores RFM basados en fecha de registro (temporal hasta tener historial de compras)
+                    // Recency Score: Días desde el registro (a menor número, más reciente)
+                    Integer recencyScore = 0;
+                    if (cliente.getRegistrationDate() != null) {
+                        recencyScore = (int) java.time.temporal.ChronoUnit.DAYS.between(cliente.getRegistrationDate(), hoy);
+                    }
+                    
+                    // Frequency Score: Por ahora usamos un valor por defecto de 1
                     // TODO: Calcular desde historial de compras cuando esté disponible
+                    Integer frequencyScore = 1;
+                    
+                    // Monetary Score: Por ahora usamos un valor por defecto de 0
+                    // TODO: Calcular desde historial de compras cuando esté disponible
+                    java.math.BigDecimal monetaryScore = java.math.BigDecimal.ZERO;
+
                     return PageMarketingClienteResponse.ClienteMarketingDTO.builder()
                             .clienteId(cliente.getClienteId())
                             .dni(cliente.getDni())
@@ -257,9 +272,9 @@ public class ClienteServicioImpl implements IClienteAdminServicio, IClienteConsu
                             .email(cliente.getEmail())
                             .categoria(cliente.getCategoria())
                             .estado(cliente.getEstado().name())
-                            .recencyScore(null) // Se calculará desde historial de compras cuando esté disponible
-                            .frequencyScore(null) // Se calculará desde historial de compras cuando esté disponible
-                            .monetaryScore(null) // Se calculará desde historial de compras cuando esté disponible
+                            .recencyScore(recencyScore)
+                            .frequencyScore(frequencyScore)
+                            .monetaryScore(monetaryScore)
                             .ubicacion(ubicacion)
                             .edad(edad)
                             .build();

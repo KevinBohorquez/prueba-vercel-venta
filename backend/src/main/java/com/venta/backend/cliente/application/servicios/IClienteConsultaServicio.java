@@ -69,3 +69,4 @@ public interface IClienteConsultaServicio {
     ClienteResponse obtenerClientePorDni(String dni);
 }
 
+
