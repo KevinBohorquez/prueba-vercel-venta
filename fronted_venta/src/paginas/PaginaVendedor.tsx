@@ -4,13 +4,8 @@ import SellerTable from '../components/SellerTable';
 import { SellerType, SellerStatus } from '../types/seller.types';
 import type { VendedorResponse, SedeResponse } from '../types/Vendedor';
 import { CreateSellerModal } from '../components/CreateSellerModal';
-<<<<<<< HEAD
-import { CreateComboModal } from '../components/CreateComboModal';
-import { useRole } from '../contexts/RoleContext';
-=======
 import SedeTable from '../components/SedeTable';
 import SellerPagination from '../components/SellerPagination';
->>>>>>> 25bb0cd37e9979886468ca0a21cd4da33ac31152
 
 type TabId = 'vendedores' | 'sedes';
 
@@ -38,10 +33,6 @@ interface FilterState {
 export function PaginaVendedor() {
   // Empieza con la pestaña de vendedores
   const [activeTab, setActiveTab] = useState<TabId>('vendedores');
-
-  // Obtener rol del usuario
-  const { role } = useRole();
-  const isAdmin = role === 'administrador';
 
   // 2. Usar el tipo VendedorResponse para el estado
   const [sellers, setSellers] = useState<VendedorResponse[]>([]);
@@ -84,9 +75,8 @@ export function PaginaVendedor() {
     status: vendedor.sellerStatus === 'ACTIVE' ? SellerStatus.Activo : SellerStatus.Inactivo,
   }));
 
-  // Estado para los modales
+  // Estado para el modal de creación
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isCreateComboModalOpen, setIsCreateComboModalOpen] = useState(false);
 
   const tabs = [
     { id: 'vendedores', label: 'Vendedores' },
@@ -272,50 +262,6 @@ export function PaginaVendedor() {
     fetchSellers(); // Refrescar la lista de vendedores
   };
 
-<<<<<<< HEAD
-  const handleComboSaveSuccess = () => {
-    setIsCreateComboModalOpen(false); // Cerrar el modal
-    // Podrías refrescar una lista de combos aquí si fuera necesario
-  };
-
-  return (
-    <div className="bg-gray-100 min-h-screen">
-      <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        {/* 1. Cabecera */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Vendedores</h1>
-          <p className="text-gray-600 mt-1">
-            Crear vendedores y asignarles a una sede para empezar a vender
-          </p>
-        </div>
-
-        {/* 2. Pestañas (Tabs) */}
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as TabId)}
-                className={`
-                  ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                  whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm
-                `}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-
-
-        {/* 3. Contenido Principal (basado en la pestaña activa) */}
-        <div>
-=======
   return (
     <div className="bg-gray-100 min-h-screen">
       <div className="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-lg">
@@ -349,27 +295,11 @@ export function PaginaVendedor() {
         </div>
         {/* 3. Contenido Principal (basado en la pestaña activa) */}
         <div>
->>>>>>> 25bb0cd37e9979886468ca0a21cd4da33ac31152
           {/* Contenido de la pestaña VENDEDORES */}
           {activeTab === 'vendedores' && (
             <div>
               <SellerToolbar
                 onNewSellerClick={() => {
-<<<<<<< HEAD
-                  setIsCreateModalOpen(true);
-                }}
-                onCreateComboClick={() => {
-                  setIsCreateComboModalOpen(true);
-                }}
-                isAdmin={isAdmin}
-              />              {isLoading && <p className='py-4 text-center text-gray-600'>Cargando vendedores desde el backend...</p>}
-             
-              {error && (
-                <div className='p-4 my-4 bg-red-100 text-red-700 rounded-md'>
-                    <p className='font-bold'>Error al cargar datos:</p>
-                    <p>{error.message}</p>
-                    <p className='mt-2 text-sm'>Asegúrese de que el backend (${API_BASE_URL}) esté activo.</p>
-=======
                   setSellerToEdit(null);
                   setIsCreateModalOpen(true);
                 }}
@@ -387,7 +317,6 @@ export function PaginaVendedor() {
                   <p className="mt-2 text-sm">
                     Asegúrese de que el backend (${API_BASE_URL}) esté activo.
                   </p>
->>>>>>> 25bb0cd37e9979886468ca0a21cd4da33ac31152
                 </div>
               )}
               {/* Solo mostramos la tabla si no está cargando y no hay error */}
@@ -400,32 +329,6 @@ export function PaginaVendedor() {
                     onEdit={handleEditSeller}
                   />
 
-<<<<<<< HEAD
-          {/* Contenido de la pestaña SEDES */}
-          {activeTab === 'sedes' && (
-            <div className="p-4">
-              <h3 className="text-xl font-semibold">Visualizar Sedes de Venta por TODO</h3>
-              <p className="text-gray-500 mt-2">Waaaaaaa.).</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {isCreateModalOpen && (
-        <CreateSellerModal
-          onClose={() => setIsCreateModalOpen(false)}
-          onSaveSuccess={handleSaveSuccess}
-          apiBaseUrl={API_BASE_URL}
-        />
-      )}
-
-      {isCreateComboModalOpen && (
-        <CreateComboModal
-          isOpen={isCreateComboModalOpen}
-          onClose={() => setIsCreateComboModalOpen(false)}
-          onSaveSuccess={handleComboSaveSuccess}
-          apiBaseUrl={API_BASE_URL}
-=======
                   <div className="mt-4">
                     <SellerPagination
                       currentPage={filters.page}
@@ -471,13 +374,8 @@ export function PaginaVendedor() {
           onSaveSuccess={handleSaveSuccess}
           apiBaseUrl={API_BASE_URL}
           sellerDataToEdit={sellerToEdit}
->>>>>>> 25bb0cd37e9979886468ca0a21cd4da33ac31152
         />
       )}
     </div>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 25bb0cd37e9979886468ca0a21cd4da33ac31152

@@ -1,21 +1,21 @@
 export const SellerStatus = {
-  Activo: 'Activo',
-  Inactivo: 'Inactivo',
-} as const
-export type SellerStatus = typeof SellerStatus[keyof typeof SellerStatus]
+  Activo: 'Activo',
+  Inactivo: 'Inactivo',
+} as const;
+export type SellerStatus = (typeof SellerStatus)[keyof typeof SellerStatus];
 
 export const SellerType = {
-  Interno: 'Interno',
-  Externo: 'Externo',
-} as const
-export type SellerType = typeof SellerType[keyof typeof SellerType]
+  Interno: 'Interno',
+  Externo: 'Externo',
+} as const;
+export type SellerType = (typeof SellerType)[keyof typeof SellerType];
 
 // 🚀 NUEVA INTERFAZ: Definición del objeto Sede (basada en Sede.java)
 export interface Sede {
-    id: string; 
-    name: string; // Este campo es el que contiene el nombre legible.
-    branchType?: string; // Asumiendo que existe el tipo de sucursal.
-    // ... otras propiedades si las hay
+  id: string;
+  name: string; // Este campo es el que contiene el nombre legible.
+  branchType?: string; // Asumiendo que existe el tipo de sucursal.
+  // ... otras propiedades si las hay
 }
 
 export interface Seller {
@@ -26,10 +26,6 @@ export interface Seller {
   // 🔑 CORRECCIÓN CLAVE: sede puede ser string o Sede object
   sede: string | Sede;
   status: SellerStatus;
-<<<<<<< HEAD
-}export interface SellerTableProps {
-  sellers: Seller[];
-=======
 }
 
 export interface SellerTableProps {
@@ -37,25 +33,18 @@ export interface SellerTableProps {
   onDeactivate: (id: number) => void;
   onActivate: (id: number) => void;
   onEdit: (id: number) => void;
->>>>>>> 25bb0cd37e9979886468ca0a21cd4da33ac31152
 }
 
 export interface TypePillProps {
-  type: SellerType;
+  type: SellerType;
 }
 
 export interface StatusPillProps {
-  status: SellerStatus;
+  status: SellerStatus;
 }
 
 export interface SellerToolbarProps {
-<<<<<<< HEAD
   onNewSellerClick: () => void;
   onCreateComboClick?: () => void;
   isAdmin?: boolean;
 }
-=======
-  onNewSellerClick: () => void; // La función que viene desde PaginaVendedor
-  // para otros filtros podría ser
-}
->>>>>>> 25bb0cd37e9979886468ca0a21cd4da33ac31152
