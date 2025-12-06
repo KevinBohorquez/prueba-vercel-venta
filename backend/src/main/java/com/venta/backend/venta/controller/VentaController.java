@@ -127,6 +127,18 @@ public class VentaController {
             @Parameter(description = "ID del cliente a asignar") @PathVariable Long clienteId) {
         ventaCarritoService.asignarCliente(ventaId, clienteId);
     }
+    
+    @Operation(summary = "Desasignar cliente de venta", description = "Elimina la asignación del cliente de una venta existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Cliente desasignado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @DeleteMapping("/{ventaId}/cliente")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void desasignarCliente(
+            @Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        ventaCarritoService.desasignarCliente(ventaId);
+    }
 
     @Operation(summary = "Crear venta desde lead de marketing", description = "Crea una nueva venta a partir de un lead generado por marketing")
     @ApiResponses(value = {

@@ -49,3 +49,41 @@
 2025-12-06 06:43:17.395 [NO-TRACE] [NO-USER] [restartedMain] WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
 2025-12-06 06:43:17.398 [NO-TRACE] [NO-USER] [restartedMain] WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
 2025-12-06 06:43:41.939 [c0562673] [ANONYMOUS] [http-nio-8080-exec-10] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [java.time.temporal.UnsupportedTemporalTypeException: Unsupported field: HourOfDay]
+2025-12-06 06:45:12.334 [82886f62] [ANONYMOUS] [http-nio-8080-exec-6] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [java.time.temporal.UnsupportedTemporalTypeException: Unsupported field: HourOfDay]
+2025-12-06 06:45:12.421 [0ddc5144] [ANONYMOUS] [http-nio-8080-exec-5] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource favicon.ico.]
+2025-12-06 06:45:22.168 [e9d9ba13] [ANONYMOUS] [http-nio-8080-exec-8] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [java.time.temporal.UnsupportedTemporalTypeException: Unsupported field: HourOfDay]
+2025-12-06 06:45:22.267 [b70dcf05] [ANONYMOUS] [http-nio-8080-exec-7] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource favicon.ico.]
+2025-12-06 06:45:28.551 [1a510bc9] [ANONYMOUS] [http-nio-8080-exec-9] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [java.time.temporal.UnsupportedTemporalTypeException: Unsupported field: HourOfDay]
+2025-12-06 06:45:28.623 [f4182163] [ANONYMOUS] [http-nio-8080-exec-10] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource favicon.ico.]
+2025-12-06 06:52:44.366 [NO-TRACE] [NO-USER] [restartedMain] INFO  c.venta.backend.BackendApplication - Starting BackendApplication using Java 21.0.5 with PID 50440 (C:\Users\USER\Desktop\diseño proyecto\Mod-Ventas\backend\build\classes\java\main started by USER in C:\Users\USER\Desktop\diseño proyecto\Mod-Ventas\backend)
+2025-12-06 06:52:44.366 [NO-TRACE] [NO-USER] [restartedMain] INFO  c.venta.backend.BackendApplication - No active profile set, falling back to 1 default profile: "default"
+2025-12-06 06:52:50.867 [NO-TRACE] [NO-USER] [restartedMain] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'ventaController' defined in file [C:\Users\USER\Desktop\diseño proyecto\Mod-Ventas\backend\build\classes\java\main\com\venta\backend\venta\controller\VentaController.class]: Unsatisfied dependency expressed through constructor parameter 0: No qualifying bean of type 'com.venta.backend.venta.servicios.IVentaCarritoService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+2025-12-06 06:52:51.138 [NO-TRACE] [NO-USER] [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 0 of constructor in com.venta.backend.venta.controller.VentaController required a bean of type 'com.venta.backend.venta.servicios.IVentaCarritoService' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'com.venta.backend.venta.servicios.IVentaCarritoService' in your configuration.
+
+2025-12-06 06:52:52.991 [NO-TRACE] [NO-USER] [restartedMain] INFO  c.venta.backend.BackendApplication - Starting BackendApplication using Java 21.0.5 with PID 50440 (C:\Users\USER\Desktop\diseño proyecto\Mod-Ventas\backend\build\classes\java\main started by USER in C:\Users\USER\Desktop\diseño proyecto\Mod-Ventas\backend)
+2025-12-06 06:52:52.992 [NO-TRACE] [NO-USER] [restartedMain] INFO  c.venta.backend.BackendApplication - No active profile set, falling back to 1 default profile: "default"
+2025-12-06 06:52:57.591 [NO-TRACE] [NO-USER] [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-06 06:52:58.155 [NO-TRACE] [NO-USER] [restartedMain] INFO  c.venta.backend.BackendApplication - Started BackendApplication in 5.282 seconds (process running for 601.529)
+2025-12-06 06:52:58.159 [NO-TRACE] [NO-USER] [restartedMain] WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2025-12-06 06:52:58.160 [NO-TRACE] [NO-USER] [restartedMain] WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2025-12-06 07:08:43.944 [921f578b] [ANONYMOUS] [http-nio-8080-exec-4] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [java.lang.IllegalStateException: Duplicate key 5 (attempted merging values GuardarProductosRequest.ProductoCarrito(idProducto=5, nombreProducto=Internet 300Mbps, precioUnitario=149.99, cantidad=1) and GuardarProductosRequest.ProductoCarrito(idProducto=5, nombreProducto=Internet 300Mbps, precioUnitario=149.99, cantidad=1))]
+2025-12-06 07:09:05.008 [NO-TRACE] [NO-USER] [restartedMain] INFO  c.venta.backend.BackendApplication - Starting BackendApplication using Java 21.0.5 with PID 50440 (C:\Users\USER\Desktop\diseño proyecto\Mod-Ventas\backend\build\classes\java\main started by USER in C:\Users\USER\Desktop\diseño proyecto\Mod-Ventas\backend)
+2025-12-06 07:09:05.009 [NO-TRACE] [NO-USER] [restartedMain] INFO  c.venta.backend.BackendApplication - No active profile set, falling back to 1 default profile: "default"
+2025-12-06 07:09:12.110 [NO-TRACE] [NO-USER] [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-06 07:09:12.989 [NO-TRACE] [NO-USER] [restartedMain] INFO  c.venta.backend.BackendApplication - Started BackendApplication in 8.095 seconds (process running for 1576.363)
+2025-12-06 07:09:12.997 [NO-TRACE] [NO-USER] [restartedMain] WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2025-12-06 07:09:12.997 [NO-TRACE] [NO-USER] [restartedMain] WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2025-12-06 07:09:13.501 [c3e3b91d] [ANONYMOUS] [http-nio-8080-exec-2] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource api/venta/90/guardar-productos.]

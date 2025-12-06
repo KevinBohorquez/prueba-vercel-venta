@@ -69,6 +69,16 @@ export const asignarClienteAVenta = async (ventaId: number, clienteId: number): 
     }
 };
 
+export const desasignarClienteDeVenta = async (ventaId: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/venta/${ventaId}/cliente`, {
+        method: 'DELETE',
+    });
+
+    if (!response.ok) {
+        throw new Error('Error al eliminar cliente de la venta');
+    }
+};
+
 export interface RegistroClienteRequest {
     dni: string;
     firstName: string;

@@ -229,6 +229,16 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     
     @Override
     @Transactional
+    public void desasignarCliente(Long ventaId) {
+        Venta venta = ventaRepositorio.findById(ventaId)
+                .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
+        
+        venta.setClienteId(null);
+        ventaRepositorio.save(venta);
+    }
+    
+    @Override
+    @Transactional
     public void guardarProductos(Long ventaId, List<GuardarProductosRequest.ProductoCarrito> productosCarrito) {
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
