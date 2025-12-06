@@ -60,6 +60,9 @@ export function useQuotation() {
   // Product Catalog Modal State
   const [catalogModalOpen, setCatalogModalOpen] = useState(false);
 
+  // Create Client Modal State
+  const [createClientModalOpen, setCreateClientModalOpen] = useState(false);
+
   // Detail View State
   const [selectedQuotationDetail, setSelectedQuotationDetail] = useState<QuotationResponse | null>(
     null
@@ -436,6 +439,10 @@ export function useQuotation() {
     // Catalog Modal State
     catalogModalOpen,
     setCatalogModalOpen,
+
+    // Create Client Modal State
+    createClientModalOpen,
+    setCreateClientModalOpen,
 
     // Detail View State
     selectedQuotationDetail,

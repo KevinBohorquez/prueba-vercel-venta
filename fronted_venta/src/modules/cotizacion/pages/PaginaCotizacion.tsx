@@ -4,6 +4,7 @@ import { QuotationForm } from '../components/QuotationForm';
 import { QuotationDetail } from '../components/QuotationDetail';
 import { EmailDialog } from '../components/EmailDialog';
 import { AcceptQuotationDialog } from '../components/AcceptQuotationDialog';
+import { ModalCrearCliente } from '../../clientes/components/ModalCrearCliente';
 
 export function PaginaCotizacion() {
   const hookData = useQuotation();
@@ -132,6 +133,7 @@ export function PaginaCotizacion() {
           onOpenCatalog={() => hookData.setCatalogModalOpen(true)}
           onCloseCatalog={() => hookData.setCatalogModalOpen(false)}
           onAddProductFromCatalog={hookData.handleAddProductFromCatalog}
+          onOpenCreateClient={() => hookData.setCreateClientModalOpen(true)}
         />
       )}
 
@@ -152,6 +154,17 @@ export function PaginaCotizacion() {
         onCancel={() => hookData.setAcceptDialogOpen(false)}
         isLoading={hookData.isAccepting}
       />
+
+      {/* Create Client Modal */}
+      {hookData.createClientModalOpen && (
+        <ModalCrearCliente
+          onClose={() => hookData.setCreateClientModalOpen(false)}
+          onSuccess={() => {
+            // Reload clients list after creating new client
+            window.location.reload();
+          }}
+        />
+      )}
     </div>
   );
 }

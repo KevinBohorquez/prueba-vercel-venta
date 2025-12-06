@@ -28,13 +28,6 @@ export function Header() {
     <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shadow-sm">
       <div className="flex items-center gap-4 flex-1">
         <span className="text-xl font-semibold text-gray-900">{getPageTitle()}</span>
-        <div className="flex-1 max-w-md">
-          <input
-            type="text"
-            placeholder="Q Buscar cotización, cliente, producto..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          />
-        </div>
       </div>
 
       <div className="flex items-center gap-6">
