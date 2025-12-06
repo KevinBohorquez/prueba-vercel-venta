@@ -31,12 +31,12 @@ const SellerTable = ({ sellers, onDeactivate, onActivate, onEdit }: SellerTableP
             <td className="px-6 py-4 whitespace-nowrap text-sm">
               <TypePill type={seller.type} />
             </td>
-            
+
             {/* 🔑 CORRECCIÓN: Acceder a la propiedad .name del objeto sede */}
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
               {seller.sede ? (typeof seller.sede === 'string' ? seller.sede : seller.sede.name) : 'N/A'}
             </td>
-            
+
             <td className="px-6 py-4 whitespace-nowrap text-sm">
               <StatusPill status={seller.status} />
             </td>

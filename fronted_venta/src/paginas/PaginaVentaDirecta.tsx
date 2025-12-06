@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfirmCancelModal } from '../components/ConfirmCancelModal';
 import { ProductCatalogModal } from '../components/ProductCatalogModal';
-import SellerDisplayWidget from '../components/SellerDisplayWidget';
-import type { VendedorResponse } from '../types/Vendedor';
+import SellerDisplayWidget from '../modules/vendedor/components/SellerDisplayWidget';
+import type { VendedorResponse } from '../modules/vendedor/types/Vendedor';
 import type { Product } from '../components/ProductCatalogModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';

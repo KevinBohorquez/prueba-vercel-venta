@@ -5,8 +5,8 @@ import { SellerType, SellerStatus } from '../types/seller.types';
 import type { VendedorResponse, SedeResponse } from '../types/Vendedor';
 import { CreateSellerModal } from '../components/CreateSellerModal';
 
-import { CreateComboModal } from '../components/CreateComboModal';
-import { useRole } from '../contexts/RoleContext';
+import { CreateComboModal } from '../../../components/CreateComboModal';
+import { useRole } from '../../../contexts/RoleContext';
 
 import SedeTable from '../components/SedeTable';
 import SellerPagination from '../components/SellerPagination';
