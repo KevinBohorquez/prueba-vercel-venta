@@ -8,19 +8,20 @@
 -- Insertar productos individuales
 INSERT INTO productos (codigo, nombre, tipo, precio_base, precio_final, descuento_total, informacion_adicional, imagen_url, activo, stock, created_at, updated_at, created_by)
 VALUES
-('PROD-0001', 'iPhone 15 Pro', 'EQUIPO_MOVIL', 999.99, 999.99, 0.00, '128GB, Color Negro', 'https://example.com/iphone15.jpg', TRUE, 50, NOW(), NOW(), 'admin'),
-('PROD-0002', 'Samsung Galaxy S24', 'EQUIPO_MOVIL', 899.99, 899.99, 0.00, '256GB, Color Blanco', 'https://example.com/galaxy-s24.jpg', TRUE, 30, NOW(), NOW(), 'admin'),
-('PROD-0003', 'Internet Fibra 200Mbps', 'SERVICIO_HOGAR', 49.99, 49.99, 0.00, 'Velocidad de descarga 200Mbps, carga 100Mbps', 'https://example.com/internet.jpg', TRUE, 100, NOW(), NOW(), 'admin'),
-('PROD-0004', 'TV Cable Premium', 'SERVICIO_HOGAR', 39.99, 39.99, 0.00, 'Más de 200 canales HD', 'https://example.com/tv-cable.jpg', TRUE, 100, NOW(), NOW(), 'admin'),
-('PROD-0005', 'Plan Postpago Ilimitado', 'SERVICIO_MOVIL', 29.99, 29.99, 0.00, 'Llamadas y SMS ilimitados, 20GB datos', 'https://example.com/plan-ilimitado.jpg', TRUE, 100, NOW(), NOW(), 'admin'),
-('PROD-0006', 'Tablet Android 10"', 'EQUIPO_MOVIL', 299.99, 299.99, 0.00, '64GB, Pantalla Full HD', 'https://example.com/tablet.jpg', TRUE, 25, NOW(), NOW(), 'admin'),
-('PROD-0007', 'Router WiFi 6', 'SERVICIO_HOGAR', 89.99, 89.99, 0.00, 'Dual Band, hasta 1200Mbps', 'https://example.com/router.jpg', TRUE, 40, NOW(), NOW(), 'admin'),
-('PROD-0008', 'Smartwatch Pro', 'EQUIPO_MOVIL', 199.99, 199.99, 0.00, 'Monitor de salud, GPS integrado', 'https://example.com/smartwatch.jpg', TRUE, 35, NOW(), NOW(), 'admin');
+('PROD-0001', 'Smartphone X20', 'EQUIPO_MOVIL', 999.99, 999.99, 0.00, '128GB, Color Negro', 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400', TRUE, 50, NOW(), NOW(), 'admin'),
+('PROD-0002', 'iPhone 14 Pro', 'EQUIPO_MOVIL', 899.99, 899.99, 0.00, '256GB, Color Blanco', 'https://images.unsplash.com/photo-1678685888221-cda5f6997548?w=400', TRUE, 30, NOW(), NOW(), 'admin'),
+('PROD-0003', 'Samsung Galaxy S23', 'EQUIPO_MOVIL', 799.99, 799.99, 0.00, '128GB, Color Azul', 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400', TRUE, 40, NOW(), NOW(), 'admin'),
+('PROD-0004', 'Internet 100Mbps', 'SERVICIO_HOGAR', 49.99, 49.99, 0.00, 'Velocidad de descarga 100Mbps', 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=400', TRUE, 100, NOW(), NOW(), 'admin'),
+('PROD-0005', 'Internet 300Mbps', 'SERVICIO_HOGAR', 79.99, 79.99, 0.00, 'Velocidad de descarga 300Mbps', 'https://images.unsplash.com/photo-1606904825846-647eb07f5be2?w=400', TRUE, 100, NOW(), NOW(), 'admin'),
+('PROD-0006', 'TV Cable Premium', 'SERVICIO_HOGAR', 39.99, 39.99, 0.00, 'Más de 200 canales HD', 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400', TRUE, 100, NOW(), NOW(), 'admin'),
+('PROD-0007', 'Plan Postpago Ilimitado', 'SERVICIO_MOVIL', 29.99, 29.99, 0.00, 'Llamadas y SMS ilimitados, 20GB datos', 'https://images.unsplash.com/photo-1604537529428-15bcbeecfe4d?w=400', TRUE, 100, NOW(), NOW(), 'admin'),
+('PROD-0008', 'Plan Max 20GB', 'SERVICIO_MOVIL', 19.99, 19.99, 0.00, 'Llamadas ilimitadas, 20GB datos', 'https://images.unsplash.com/photo-1604537466158-719b1972feb8?w=400', TRUE, 100, NOW(), NOW(), 'admin'),
+('PROD-0009', 'Plan Familia 50GB', 'SERVICIO_MOVIL', 49.99, 49.99, 0.00, 'Para toda la familia, 50GB compartidos', 'https://images.unsplash.com/photo-1604537466573-5e94508fd243?w=400', TRUE, 100, NOW(), NOW(), 'admin');
 
 -- Insertar un combo de ejemplo
 INSERT INTO productos (codigo, nombre, tipo, precio_base, precio_final, descuento_total, informacion_adicional, imagen_url, activo, stock, created_at, updated_at, created_by)
 VALUES
-('COMBO-0001', 'Pack Conectividad Total', 'COMBO', 119.97, 99.99, 19.98, 'Internet + TV Cable + Plan Móvil', 'https://example.com/combo1.jpg', TRUE, 20, NOW(), NOW(), 'admin');
+('COMBO-0001', 'Pack Conectividad Total', 'COMBO', 119.97, 99.99, 19.98, 'Internet + TV Cable + Plan Móvil', 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400', TRUE, 20, NOW(), NOW(), 'admin');
 
 -- Insertar relaciones del combo (usar los IDs correctos según tu base de datos)
 -- Nota: Ajusta los IDs según los generados en tu base de datos
