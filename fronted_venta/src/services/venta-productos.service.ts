@@ -2,15 +2,23 @@ import type { VentaResumenApi } from '../paginas/PaginaVentaDirecta';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
+interface ProductoCarrito {
+    idProducto: number;
+    nombreProducto: string;
+    precioUnitario: number;
+    cantidad: number;
+}
+
 /**
  * Guarda los productos de la venta y recalcula totales
  */
-export const guardarProductosVenta = async (ventaId: number): Promise<void> => {
+export const guardarProductosVenta = async (ventaId: number, productos: ProductoCarrito[]): Promise<void> => {
     const response = await fetch(`${API_BASE_URL}/venta/${ventaId}/guardar-productos`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ productos }),
     });
 
     if (!response.ok) {
@@ -44,5 +52,23 @@ export const actualizarMetodoPago = async (ventaId: number, metodoPago: 'EFECTIV
 
     if (!response.ok) {
         throw new Error('Error al actualizar método de pago');
+    }
+};
+
+/**
+ * Confirma una venta cambiando su estado a CONFIRMADA
+ * Valida que tenga vendedor, cliente, método de pago y al menos 1 producto
+ */
+export const confirmarVenta = async (ventaId: number): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/venta/${ventaId}/confirmar`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Error al confirmar venta');
     }
 };

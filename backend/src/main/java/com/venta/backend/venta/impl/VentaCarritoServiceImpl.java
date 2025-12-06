@@ -2,6 +2,7 @@ package com.venta.backend.venta.impl;
 
 import com.venta.backend.venta.dto.request.AgregarItemVentaRequest;
 import com.venta.backend.venta.dto.request.CrearVentaDirectaRequest;
+import com.venta.backend.venta.dto.request.GuardarProductosRequest;
 import com.venta.backend.venta.dto.response.VentaResumenResponse;
 import com.venta.backend.venta.exceptions.VentaNoEncontradaException;
 import com.venta.backend.venta.exceptions.VentaOperacionNoPermitidaException;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -223,23 +225,59 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     
     @Override
     @Transactional
-    public void guardarProductos(Long ventaId) {
-        // Los productos ya se guardan al agregarlos, este método recalcula totales
+    public void guardarProductos(Long ventaId, List<GuardarProductosRequest.ProductoCarrito> productosCarrito) {
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
         
-        BigDecimal subtotal = BigDecimal.ZERO;
-        BigDecimal descuentoTotal = BigDecimal.ZERO;
-        
-        for (DetalleVenta detalle : venta.getDetalles()) {
-            subtotal = subtotal.add(detalle.getSubtotal());
-            descuentoTotal = descuentoTotal.add(detalle.getDescuentoMonto());
+        if (!venta.esBorrador()) {
+            throw new VentaOperacionNoPermitidaException("Solo se puede modificar una venta en estado borrador.");
         }
         
-        venta.setSubtotal(subtotal);
-        venta.setDescuentoTotal(descuentoTotal);
-        venta.setTotal(subtotal.subtract(descuentoTotal));
+        // 1. Obtener detalles actuales de la BD
+        List<DetalleVenta> detallesActuales = venta.getDetalles();
         
+        // 2. Crear mapa de productos del carrito (frontend)
+        java.util.Map<Long, com.venta.backend.venta.dto.request.GuardarProductosRequest.ProductoCarrito> carritoMap = 
+            productosCarrito.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                    p -> p.getIdProducto(),
+                    p -> p
+                ));
+        
+        // 3. Actualizar o eliminar detalles existentes
+        java.util.Iterator<DetalleVenta> iterator = detallesActuales.iterator();
+        while (iterator.hasNext()) {
+            DetalleVenta detalle = iterator.next();
+            Long idProducto = detalle.getIdProducto();
+            
+            if (carritoMap.containsKey(idProducto)) {
+                // Producto existe en carrito → ACTUALIZAR cantidad
+                var productoCarrito = carritoMap.get(idProducto);
+                detalle.actualizarCantidad(productoCarrito.getCantidad());
+                carritoMap.remove(idProducto); // Ya procesado
+            } else {
+                // Producto NO existe en carrito → ELIMINAR
+                iterator.remove();
+                detalleVentaRepositorio.delete(detalle);
+            }
+        }
+        
+        // 4. Insertar nuevos productos que están en carrito pero no en BD
+        for (var productoCarrito : carritoMap.values()) {
+            DetalleVenta nuevoDetalle = DetalleVenta.nuevoDetalle(
+                venta,
+                productoCarrito.getIdProducto(),
+                productoCarrito.getNombreProducto(),
+                productoCarrito.getPrecioUnitario(),
+                productoCarrito.getCantidad()
+            );
+            detallesActuales.add(nuevoDetalle);
+        }
+        
+        // 5. Recalcular totales
+        venta.recalcularMontos();
+        
+        // 6. Guardar venta (cascade guarda detalles)
         ventaRepositorio.save(venta);
     }
     
@@ -261,6 +299,47 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Método de pago inválido: " + metodoPago);
         }
+    }
+    
+    @Override
+    @Transactional
+    public void confirmarVenta(Long ventaId) {
+        Venta venta = ventaRepositorio.findById(ventaId)
+                .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
+        
+        // Validación 1: Solo se puede confirmar una venta en borrador
+        if (!venta.esBorrador()) {
+            throw new VentaOperacionNoPermitidaException("Solo se puede confirmar una venta en estado borrador.");
+        }
+        
+        // Validación 2: Debe tener vendedor asignado
+        if (venta.getIdVendedor() == null) {
+            throw new VentaOperacionNoPermitidaException("La venta debe tener un vendedor asignado.");
+        }
+        
+        // Validación 3: Debe tener cliente asignado
+        if (venta.getClienteId() == null) {
+            throw new VentaOperacionNoPermitidaException("La venta debe tener un cliente asignado.");
+        }
+        
+        // Validación 4: Debe tener método de pago
+        if (venta.getMetodoPago() == null) {
+            throw new VentaOperacionNoPermitidaException("La venta debe tener un método de pago asignado.");
+        }
+        
+        // Validación 5: Debe tener al menos 1 producto
+        if (venta.getDetalles() == null || venta.getDetalles().isEmpty()) {
+            throw new VentaOperacionNoPermitidaException("La venta debe tener al menos un producto.");
+        }
+        
+        // Recalcular totales finales
+        venta.recalcularMontos();
+        
+        // Cambiar estado a CONFIRMADA
+        venta.setEstado(VentaEstado.CONFIRMADA);
+        
+        // Guardar venta
+        ventaRepositorio.save(venta);
     }
 
     private String generarCodigoVenta(OrigenVenta origenVenta) {

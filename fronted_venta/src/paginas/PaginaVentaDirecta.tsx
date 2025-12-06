@@ -8,7 +8,7 @@ import type { Product } from '../components/ProductCatalogModal';
 import { BuscadorCliente } from '../components/BuscadorCliente';
 import type { Cliente } from '../services/cliente.service';
 import { asignarClienteAVenta } from '../services/cliente.service';
-import { guardarProductosVenta, obtenerTotalesVenta, actualizarMetodoPago } from '../services/venta-productos.service';
+import { guardarProductosVenta, obtenerTotalesVenta, actualizarMetodoPago, confirmarVenta } from '../services/venta-productos.service';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -105,6 +105,7 @@ export function PaginaVentaDirecta() {
   const [numVenta, setNumVenta] = useState<string>('');
   const [asignandoVendedor, setAsignandoVendedor] = useState(false);
   const [vendedorAsignado, setVendedorAsignado] = useState<{ id: number, nombre: string } | null>(null);
+  const [resumen, setResumen] = useState<VentaResumenApi | null>(null);
 
   // --- Carga Inicial de Datos ---
   useEffect(() => {
@@ -131,6 +132,7 @@ export function PaginaVentaDirecta() {
         setDescuentoApi(data.descuentoTotal);
         //setTotalApi(data.total);
         setNumVenta(data.numVenta || `VENTA-${data.ventaId}`);
+        setResumen(data); // Guardar resumen completo
 
         // Cargar vendedor asignado si existe
         if (data.idVendedor && data.nombreVendedor) {
@@ -258,18 +260,56 @@ export function PaginaVentaDirecta() {
   };
 
   const handleGuardarProductos = async () => {
-    if (!ventaId) return;
+    if (!ventaId || !resumen) return;
 
     try {
-      await guardarProductosVenta(Number(ventaId));
+      // Convertir items del resumen al formato esperado por el backend
+      const productos = resumen.items.map(item => ({
+        idProducto: item.itemProductoId,
+        nombreProducto: item.nombreProducto,
+        precioUnitario: item.precioUnitario,
+        cantidad: item.cantidad
+      }));
+
+      await guardarProductosVenta(Number(ventaId), productos);
       alert('Productos guardados exitosamente');
 
       // Recargar totales
       const totales = await obtenerTotalesVenta(Number(ventaId));
       setDescuentoApi(totales.descuentoTotal);
+      setResumen(totales);
     } catch (error) {
       console.error('Error al guardar productos:', error);
       alert('Error al guardar productos');
+    }
+  };
+
+  const handleConfirmarVenta = async () => {
+    if (!ventaId) return;
+
+    // Validaciones en frontend
+    if (!vendedorAsignado) {
+      alert('Debe asignar un vendedor antes de confirmar la venta');
+      return;
+    }
+
+    if (!clienteSeleccionado) {
+      alert('Debe asignar un cliente antes de confirmar la venta');
+      return;
+    }
+
+    if (!resumen || !resumen.items || resumen.items.length === 0) {
+      alert('Debe agregar al menos un producto antes de confirmar la venta');
+      return;
+    }
+
+    try {
+      await confirmarVenta(Number(ventaId));
+      alert('¡Venta confirmada exitosamente!');
+      navigate('/ventas');
+    } catch (error: any) {
+      console.error('Error al confirmar venta:', error);
+      alert(error.message || 'Error al confirmar venta');
     }
   };
 
@@ -536,12 +576,17 @@ export function PaginaVentaDirecta() {
               Guardar Productos
             </button>
 
-            <button className="w-full py-3 bg-[#3C83F6] hover:bg-blue-600 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors">
+
+            <button
+              onClick={handleConfirmarVenta}
+              className="w-full py-3 bg-[#3C83F6] hover:bg-blue-600 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
               </svg>
               Confirmar Venta
             </button>
+
 
             {/* Botón Cancelar con Fondo Rojo */}
             <button

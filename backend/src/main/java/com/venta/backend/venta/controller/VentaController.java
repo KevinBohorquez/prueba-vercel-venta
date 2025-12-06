@@ -166,15 +166,18 @@ public class VentaController {
         return boletaService.obtenerBoletasPorCliente(clienteId);
     }
     
-    @Operation(summary = "Guardar productos de la venta", description = "Recalcula y guarda los totales basados en los productos agregados")
+    @Operation(summary = "Guardar productos de la venta", description = "Sincroniza el carrito del frontend con la base de datos (insert/update/delete) y recalcula totales")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Productos guardados exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Venta no es borrador"),
         @ApiResponse(responseCode = "404", description = "Venta no encontrada")
     })
     @PostMapping("/{ventaId}/guardar-productos")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void guardarProductos(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
-        ventaCarritoService.guardarProductos(ventaId);
+    public void guardarProductos(
+            @Parameter(description = "ID de la venta") @PathVariable Long ventaId,
+            @RequestBody com.venta.backend.venta.dto.request.GuardarProductosRequest request) {
+        ventaCarritoService.guardarProductos(ventaId, request.getProductos());
     }
     
     @Operation(summary = "Calcular totales de la venta", description = "Obtiene subtotal, descuento y total calculados en tiempo real")
@@ -200,6 +203,17 @@ public class VentaController {
             @Parameter(description = "Método de pago (EFECTIVO o TARJETA)") @RequestParam String metodoPago) {
         ventaCarritoService.actualizarMetodoPago(ventaId, metodoPago);
     }
+    
+    @Operation(summary = "Confirmar venta", description = "Confirma una venta en borrador cambiando su estado a CONFIRMADA. Valida que tenga vendedor, cliente, método de pago y al menos 1 producto")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Venta confirmada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Validación fallida o venta no es borrador"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @PutMapping("/{ventaId}/confirmar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void confirmarVenta(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        ventaCarritoService.confirmarVenta(ventaId);
 
     @Operation(summary = "Obtener ventas agregadas por canal (Físico vs. Llamada)")
     @GetMapping("/analisis/ventas-por-canal")

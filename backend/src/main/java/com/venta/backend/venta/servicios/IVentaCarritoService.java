@@ -20,10 +20,12 @@ public interface IVentaCarritoService {
     
     void asignarCliente(Long ventaId, Long clienteId);
     
-    void guardarProductos(Long ventaId);
+    void guardarProductos(Long ventaId, java.util.List<com.venta.backend.venta.dto.request.GuardarProductosRequest.ProductoCarrito> productosCarrito);
     
     VentaResumenResponse calcularTotales(Long ventaId);
     
     void actualizarMetodoPago(Long ventaId, String metodoPago);
+    
+    void confirmarVenta(Long ventaId);
 }
 
