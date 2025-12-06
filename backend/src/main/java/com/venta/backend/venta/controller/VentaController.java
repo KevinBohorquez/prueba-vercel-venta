@@ -26,6 +26,7 @@ import java.util.List;
 @RequestMapping("/api/venta")
 @RestController
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class VentaController {
 
     private final IVentaCarritoService ventaCarritoService;
@@ -37,6 +38,7 @@ public class VentaController {
     @Operation(summary = "Listar todas las ventas", description = "Obtiene un listado completo de todas las ventas sin paginación")
     @GetMapping
     public java.util.List<VentaListadoResponse> listarVentas() {
+        log.info("Listando todas las ventas [VentaController]");
         return ventaConsultaService.listarVentas();
     }
 
@@ -48,6 +50,7 @@ public class VentaController {
             @Parameter(description = "Campo por el cual ordenar") @RequestParam(defaultValue = "id") String sortBy,
             @Parameter(description = "Dirección del ordenamiento (asc/desc)") @RequestParam(defaultValue = "desc") String sortDir
     ) {
+        log.info("Listando ventas paginadas - Page: {}, Size: {}, SortBy: {}, SortDir: {} [VentaController]", page, size, sortBy, sortDir);
         return ventaConsultaService.listarVentasPaginadas(page, size, sortBy, sortDir);
     }
 
@@ -59,7 +62,10 @@ public class VentaController {
     @PostMapping("/directa/borrador")
     @ResponseStatus(HttpStatus.CREATED)
     public VentaResumenResponse crearVentaDirectaBorrador(@Valid @RequestBody CrearVentaDirectaRequest request) {
-        return ventaCarritoService.crearVentaDirectaBorrador(request);
+        log.info("Iniciando creación de venta directa en borrador [VentaController]");
+        VentaResumenResponse response = ventaCarritoService.crearVentaDirectaBorrador(request);
+        log.info("Venta directa creada con éxito [Venta ID: {}]", response.getVentaId());
+        return response;
     }
 
     @Operation(summary = "Agregar producto al carrito", description = "Agrega un producto a una venta en borrador")
@@ -68,6 +74,7 @@ public class VentaController {
             @Parameter(description = "ID de la venta") @PathVariable Long ventaId,
             @Valid @RequestBody AgregarItemVentaRequest request
     ) {
+        log.info("Agregando item al carrito - Producto ID: {}, Cantidad: {} [Venta ID: {}]", request.getProductoId(), request.getCantidad(), ventaId);
         return ventaCarritoService.agregarItemALaVenta(ventaId, request);
     }
 
@@ -75,6 +82,7 @@ public class VentaController {
     @GetMapping("/{ventaId}/carrito")
     public VentaResumenResponse obtenerResumen(
             @Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        log.info("Obteniendo resumen del carrito [Venta ID: {}]", ventaId);
         return ventaCarritoService.obtenerResumen(ventaId);
     }
 
@@ -88,6 +96,7 @@ public class VentaController {
     public void asignarVendedor(
             @Parameter(description = "ID de la venta") @PathVariable Long ventaId, 
             @Parameter(description = "ID del vendedor") @PathVariable Long vendedorId) {
+        log.info("Asignando vendedor ID: {} a la venta [Venta ID: {}]", vendedorId, ventaId);
         ventaCarritoService.asignarVendedor(ventaId, vendedorId);
     }
 
@@ -100,6 +109,7 @@ public class VentaController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancelarVenta(
             @Parameter(description = "ID de la venta a cancelar") @PathVariable Long ventaId) {
+        log.info("Solicitando cancelación de venta [Venta ID: {}]", ventaId);
         ventaCarritoService.cancelarVenta(ventaId);
     }
 
@@ -112,7 +122,10 @@ public class VentaController {
     @ResponseStatus(HttpStatus.CREATED)
     public VentaResumenResponse crearVentaDesdeCotizacion(
             @Parameter(description = "ID de la cotización a convertir en venta") @PathVariable Long cotizacionId) {
-        return ventaCarritoService.crearVentaDesdeCotizacion(cotizacionId);
+        log.info("Iniciando creación de venta desde cotización [Cotizacion ID: {}]", cotizacionId);
+        VentaResumenResponse response = ventaCarritoService.crearVentaDesdeCotizacion(cotizacionId);
+        log.info("Venta creada desde cotización exitosamente [Venta ID: {}]", response.getVentaId());
+        return response;
     }
 
     @Operation(summary = "Asignar cliente a venta", description = "Asigna o reemplaza el cliente de una venta existente")
@@ -125,6 +138,7 @@ public class VentaController {
     public void asignarCliente(
             @Parameter(description = "ID de la venta") @PathVariable Long ventaId,
             @Parameter(description = "ID del cliente a asignar") @PathVariable Long clienteId) {
+        log.info("Asignando cliente ID: {} a la venta [Venta ID: {}]", clienteId, ventaId);
         ventaCarritoService.asignarCliente(ventaId, clienteId);
     }
     
@@ -137,6 +151,7 @@ public class VentaController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void desasignarCliente(
             @Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        log.info("Desasignando cliente de la venta [Venta ID: {}]", ventaId);
         ventaCarritoService.desasignarCliente(ventaId);
     }
 
@@ -148,12 +163,16 @@ public class VentaController {
     @PostMapping("/lead/desde-marketing")
     @ResponseStatus(HttpStatus.CREATED)
     public VentaLeadResponse crearVentaDesdeLeadMarketing(@Valid @RequestBody CrearVentaLeadRequest request) {
-        return ventaLeadService.crearVentaDesdeLeadMarketing(request);
+        log.info("Iniciando creación de venta desde Lead Marketing - Lead ID: {} [VentaController]", request.getIdLeadMarketing());
+        VentaLeadResponse response = ventaLeadService.crearVentaDesdeLeadMarketing(request);
+        log.info("Venta desde Lead creada exitosamente [Venta ID: {}]", response.getVentaId());
+        return response;
     }
 
     @Operation(summary = "Listar leads pendientes", description = "Obtiene todas las ventas de tipo lead que están pendientes de atención")
     @GetMapping("/leads/pendientes")
     public java.util.List<VentaLeadPendienteResponse> listarVentasLeadPendientes() {
+        log.info("Listando ventas lead pendientes [VentaController]");
         return ventaLeadConsultaService.listarVentasLeadPendientes();
     }
 
@@ -161,6 +180,7 @@ public class VentaController {
     @GetMapping("/leads/{ventaId}")
     public VentaLeadDetalleResponse obtenerDetalleVentaLead(
             @Parameter(description = "ID de la venta lead") @PathVariable Long ventaId) {
+        log.info("Obteniendo detalle de venta lead [Venta ID: {}]", ventaId);
         return ventaLeadConsultaService.obtenerDetalleVentaLead(ventaId);
     }
 
@@ -168,6 +188,7 @@ public class VentaController {
     @GetMapping("/boletas/empleado/{employeeRrhhId}")
     public java.util.List<BoletaResponse> obtenerBoletasPorEmpleado(
             @Parameter(description = "ID del empleado en RRHH") @PathVariable Long employeeRrhhId) {
+        log.info("Listando boletas por empleado ID: {} [VentaController]", employeeRrhhId);
         return boletaService.obtenerBoletasPorEmpleado(employeeRrhhId);
     }
 
@@ -175,6 +196,7 @@ public class VentaController {
     @GetMapping("/boletas/cliente/{clienteId}")
     public java.util.List<BoletaClienteResponse> obtenerBoletasPorCliente(
             @Parameter(description = "ID del cliente") @PathVariable Long clienteId) {
+        log.info("Listando boletas por cliente ID: {} [VentaController]", clienteId);
         return boletaService.obtenerBoletasPorCliente(clienteId);
     }
     
@@ -189,6 +211,7 @@ public class VentaController {
     public void guardarProductos(
             @Parameter(description = "ID de la venta") @PathVariable Long ventaId,
             @RequestBody com.venta.backend.venta.dto.request.GuardarProductosRequest request) {
+        log.info("Guardando productos de la venta - Cantidad items: {} [Venta ID: {}]", request.getProductos().size(), ventaId);
         ventaCarritoService.guardarProductos(ventaId, request.getProductos());
     }
     
@@ -199,6 +222,7 @@ public class VentaController {
     })
     @GetMapping("/{ventaId}/totales")
     public ResponseEntity<VentaResumenResponse> calcularTotales(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        log.info("Calculando totales [Venta ID: {}]", ventaId);
         return ResponseEntity.ok(ventaCarritoService.calcularTotales(ventaId));
     }
     
@@ -213,6 +237,7 @@ public class VentaController {
     public void actualizarMetodoPago(
             @Parameter(description = "ID de la venta") @PathVariable Long ventaId,
             @Parameter(description = "Método de pago (EFECTIVO o TARJETA)") @RequestParam String metodoPago) {
+        log.info("Actualizando método de pago a: {} [Venta ID: {}]", metodoPago, ventaId);
         ventaCarritoService.actualizarMetodoPago(ventaId, metodoPago);
     }
     
@@ -225,7 +250,9 @@ public class VentaController {
     @PutMapping("/{ventaId}/confirmar")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void confirmarVenta(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        log.info("Iniciando confirmación de venta [Venta ID: {}]", ventaId);
         ventaCarritoService.confirmarVenta(ventaId);
+        log.info("Venta confirmada exitosamente [Venta ID: {}]", ventaId);
     }
     
     @Operation(summary = "Descargar PDF de venta", description = "Genera y descarga un PDF con el detalle completo de la venta")
@@ -235,6 +262,7 @@ public class VentaController {
     })
     @GetMapping("/{ventaId}/pdf")
     public ResponseEntity<byte[]> descargarPdfVenta(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        log.info("Generando PDF de venta [Venta ID: {}]", ventaId);
         byte[] pdfBytes = ventaCarritoService.generarPdfVenta(ventaId);
         
         return ResponseEntity.ok()
@@ -246,6 +274,7 @@ public class VentaController {
     @Operation(summary = "Obtener ventas agregadas por canal (Físico vs. Llamada)")
     @GetMapping("/analisis/ventas-por-canal")
     public ResponseEntity<List<VentasPorCanalResponse>> obtenerVentasPorCanal() {
+        log.info("Obteniendo análisis de ventas por canal [VentaController]");
         return ResponseEntity.ok(ventaConsultaService.obtenerVentasPorCanal());
     }
 }

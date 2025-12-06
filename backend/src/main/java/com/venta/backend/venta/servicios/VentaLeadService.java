@@ -20,6 +20,7 @@ import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class VentaLeadService {
 
     private final VentaRepositorio ventaRepositorio;
@@ -28,12 +29,15 @@ public class VentaLeadService {
 
     @Transactional
     public VentaLeadResponse crearVentaDesdeLeadMarketing(CrearVentaLeadRequest request) {
+        log.info("Iniciando proceso de creación de venta desde Lead Marketing - ID Lead: {} [VentaLeadService]", request.getIdLeadMarketing());
         
         // 1. Registrar cliente usando el endpoint de clientes
         Long clienteId = registrarCliente(request);
+        log.info("Cliente registrado/obtenido con éxito - ID Cliente: {} [VentaLeadService]", clienteId);
         
         // 2. Generar número de venta para LEAD
         String numVenta = generarNumeroVenta(OrigenVenta.LEAD);
+        log.debug("Número de venta generado: {} [VentaLeadService]", numVenta);
         
         // 3. Crear venta en estado BORRADOR
         Venta venta = Venta.builder()
@@ -48,6 +52,7 @@ public class VentaLeadService {
                 .build();
         
         Venta ventaGuardada = ventaRepositorio.save(venta);
+        log.info("Venta borrador creada - ID Venta: {}, Num Venta: {} [VentaLeadService]", ventaGuardada.getId(), ventaGuardada.getNumVenta());
         
         // 4. Guardar información del lead
         VentaLead ventaLead = VentaLead.builder()
@@ -63,6 +68,7 @@ public class VentaLeadService {
                 .build();
         
         ventaLeadRepositorio.save(ventaLead);
+        log.info("Información de Lead asociada a la venta [Venta ID: {}]", ventaGuardada.getId());
         
         // 5. Retornar respuesta
         return VentaLeadResponse.builder()
@@ -75,6 +81,7 @@ public class VentaLeadService {
 
     private Long registrarCliente(CrearVentaLeadRequest request) {
         try {
+            log.info("Registrando cliente desde Lead - DNI: {} [VentaLeadService]", request.getDni());
             // Crear request para el servicio de clientes
             RegistroClienteRequest clienteRequest = RegistroClienteRequest.builder()
                     .dni(request.getDni())
@@ -90,6 +97,7 @@ public class VentaLeadService {
             return response.getClienteId();
             
         } catch (Exception e) {
+            log.error("Error al registrar cliente desde Lead: {} [VentaLeadService]", e.getMessage());
             throw new RuntimeException("Error al registrar cliente: " + e.getMessage(), e);
         }
     }

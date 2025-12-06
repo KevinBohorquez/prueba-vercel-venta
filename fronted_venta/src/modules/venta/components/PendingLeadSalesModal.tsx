@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listarVentasLeadPendientes, type VentaLeadPendiente } from '../services/ventaLead.service';
+import { listarVentasLeadPendientes, type VentaLeadPendiente } from '../../../services/ventaLead.service';
 import { ModalVisualizarVenta } from './ModalVisualizarVenta';
 
 // --- Tipos para el Ordenamiento ---

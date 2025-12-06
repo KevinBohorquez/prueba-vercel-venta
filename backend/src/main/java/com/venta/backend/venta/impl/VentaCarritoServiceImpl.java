@@ -34,6 +34,7 @@ import com.venta.backend.cotizacion.infraestructura.pdf.IPdfGenerator;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class VentaCarritoServiceImpl implements IVentaCarritoService {
 
     private final VentaRepositorio ventaRepositorio;
@@ -50,6 +51,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     @Override
     @Transactional
     public VentaResumenResponse crearVentaDirectaBorrador(CrearVentaDirectaRequest request) {
+        log.info("Creando venta directa en borrador [VentaCarritoService]");
         Venta venta = ventaFactoryResolver
                 .getFactory(OrigenVenta.DIRECTA)
                 .crearVentaBorrador();
@@ -57,16 +59,19 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         venta.setNumVenta(generarCodigoVenta(OrigenVenta.DIRECTA));
 
         Venta guardada = ventaRepositorio.save(venta);
+        log.info("Venta directa creada - ID: {}, Num: {} [VentaCarritoService]", guardada.getId(), guardada.getNumVenta());
         return ventaMapper.toResumen(guardada);
     }
 
     @Override
     @Transactional
     public VentaResumenResponse agregarItemALaVenta(Long ventaId, AgregarItemVentaRequest request) {
+        log.info("Agregando item a venta - Producto ID: {}, Cantidad: {} [Venta ID: {}]", request.getProductoId(), request.getCantidad(), ventaId);
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
 
         if (!venta.esBorrador()) {
+            log.warn("Intento de modificar venta no borrador [Venta ID: {}]", ventaId);
             throw new VentaOperacionNoPermitidaException("Solo se puede modificar una venta en estado borrador.");
         }
 
@@ -78,6 +83,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         );
         
         Venta guardada = ventaRepositorio.save(venta);
+        log.debug("Item agregado/actualizado correctamente [Venta ID: {}]", ventaId);
         return ventaMapper.toResumen(guardada);
     }
 
@@ -141,6 +147,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     @Override
     @Transactional
     public void asignarVendedor(Long ventaId, Long vendedorId) {
+        log.info("Asignando vendedor ID: {} [Venta ID: {}]", vendedorId, ventaId);
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
 
@@ -155,16 +162,19 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     @Override
     @Transactional
     public void cancelarVenta(Long ventaId) {
+        log.info("Cancelando venta [Venta ID: {}]", ventaId);
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
         
         venta.setEstado(VentaEstado.CANCELADA);
         ventaRepositorio.save(venta);
+        log.info("Venta cancelada exitosamente [Venta ID: {}]", ventaId);
     }
 
     @Override
     @Transactional
     public VentaResumenResponse crearVentaDesdeCotizacion(Long cotizacionId) {
+        log.info("Creando venta desde cotización ID: {} [VentaCarritoService]", cotizacionId);
         // 1. Buscar cotización
         Cotizacion cotizacion = cotizacionRepository.findById(cotizacionId.intValue())
                 .orElseThrow(() -> new CotizacionNotFoundException("Cotización no encontrada con ID: " + cotizacionId));
@@ -185,6 +195,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
                 .build();
 
         Venta ventaGuardada = ventaRepositorio.save(venta);
+        log.info("Venta base creada desde cotización - ID: {} [VentaCarritoService]", ventaGuardada.getId());
 
         // 3. Copiar productos de DetalleCotizacion a DetalleVenta
         BigDecimal subtotalCalculado = BigDecimal.ZERO;
@@ -213,6 +224,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         ventaGuardada.setTotal(subtotalCalculado.subtract(descuentoTotalCalculado));
 
         Venta ventaFinal = ventaRepositorio.save(ventaGuardada);
+        log.info("Venta desde cotización finalizada con totales calculados [Venta ID: {}]", ventaFinal.getId());
 
         return ventaMapper.toResumen(ventaFinal);
     }
@@ -220,6 +232,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     @Override
     @Transactional
     public void asignarCliente(Long ventaId, Long clienteId) {
+        log.info("Asignando cliente ID: {} [Venta ID: {}]", clienteId, ventaId);
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
         
@@ -230,6 +243,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     @Override
     @Transactional
     public void desasignarCliente(Long ventaId) {
+        log.info("Desasignando cliente [Venta ID: {}]", ventaId);
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
         
@@ -240,6 +254,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     @Override
     @Transactional
     public void guardarProductos(Long ventaId, List<GuardarProductosRequest.ProductoCarrito> productosCarrito) {
+        log.info("Sincronizando productos del carrito - Items: {} [Venta ID: {}]", productosCarrito.size(), ventaId);
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
         
@@ -293,6 +308,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         
         // 6. Guardar venta (cascade guarda detalles)
         ventaRepositorio.save(venta);
+        log.info("Productos guardados y totales recalculados [Venta ID: {}]", ventaId);
     }
     
     @Override
@@ -304,6 +320,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     @Override
     @Transactional
     public void actualizarMetodoPago(Long ventaId, String metodoPago) {
+        log.info("Actualizando método de pago: {} [Venta ID: {}]", metodoPago, ventaId);
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
         
@@ -311,6 +328,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
             venta.setMetodoPago(com.venta.backend.venta.enums.MetodoPago.valueOf(metodoPago.toUpperCase()));
             ventaRepositorio.save(venta);
         } catch (IllegalArgumentException e) {
+            log.error("Método de pago inválido: {} [Venta ID: {}]", metodoPago, ventaId);
             throw new IllegalArgumentException("Método de pago inválido: " + metodoPago);
         }
     }
@@ -318,6 +336,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
     @Override
     @Transactional
     public void confirmarVenta(Long ventaId) {
+        log.info("Iniciando validación para confirmar venta [Venta ID: {}]", ventaId);
         Venta venta = ventaRepositorio.findById(ventaId)
                 .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
         
@@ -354,6 +373,7 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         
         // Guardar venta
         ventaRepositorio.save(venta);
+        log.info("Venta confirmada y guardada exitosamente [Venta ID: {}]", ventaId);
     }
 
     private String generarCodigoVenta(OrigenVenta origenVenta) {

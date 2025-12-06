@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { obtenerDetalleVentaLead, type VentaLeadDetalle } from '../services/ventaLead.service';
-import { ProductCatalogModal } from '../components/ProductCatalogModal';
-import type { Product } from '../components/ProductCatalogModal';
-import SellerDisplayWidget from '../modules/vendedor/components/SellerDisplayWidget';
-import { aplicarMejorDescuento } from '../services/descuento.service';
-import { guardarProductosVenta, confirmarVenta, obtenerTotalesVenta } from '../services/venta-productos.service';
+import { obtenerDetalleVentaLead, type VentaLeadDetalle } from '../../../services/ventaLead.service';
+import { ProductCatalogModal } from '../../../components/ProductCatalogModal';
+import type { Product } from '../../../components/ProductCatalogModal';
+import SellerDisplayWidget from '../../vendedor/components/SellerDisplayWidget';
+import { aplicarMejorDescuento } from '../../../services/descuento.service';
+import { guardarProductosVenta, confirmarVenta, obtenerTotalesVenta } from '../../../services/venta-productos.service';
 
 // --- Tipos de datos Producto ---
 interface ProductoVenta {

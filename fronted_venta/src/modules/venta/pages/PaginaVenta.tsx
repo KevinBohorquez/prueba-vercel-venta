@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PendingLeadSalesModal } from '../components/PendingLeadSalesModal';
-import { listarVentasPaginadas, cancelarVenta, type VentaListado } from '../services/venta.service';
+import { listarVentasPaginadas, cancelarVenta, type VentaListado } from '../../../services/venta.service';
 import { ModalVisualizarVenta } from '../components/ModalVisualizarVenta';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mod-ventas.onrender.com/api';

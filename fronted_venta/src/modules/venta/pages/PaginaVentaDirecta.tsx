@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfirmCancelModal } from '../components/ConfirmCancelModal';
-import { ProductCatalogModal } from '../components/ProductCatalogModal';
-import SellerDisplayWidget from '../modules/vendedor/components/SellerDisplayWidget';
-import type { VendedorResponse } from '../modules/vendedor/types/Vendedor';
-import type { Product } from '../components/ProductCatalogModal';
-import { BuscadorCliente } from '../components/BuscadorCliente';
-import { ModalRegistrarCliente } from '../components/ModalRegistrarCliente';
-import type { Cliente } from '../services/cliente.service';
-import { asignarClienteAVenta, desasignarClienteDeVenta } from '../services/cliente.service';
-import { guardarProductosVenta, obtenerTotalesVenta, actualizarMetodoPago, confirmarVenta } from '../services/venta-productos.service';
-import { aplicarMejorDescuento } from '../services/descuento.service';
+import { ProductCatalogModal } from '../../../components/ProductCatalogModal';
+import SellerDisplayWidget from '../../vendedor/components/SellerDisplayWidget';
+import type { VendedorResponse } from '../../vendedor/types/Vendedor';
+import type { Product } from '../../../components/ProductCatalogModal';
+import { BuscadorCliente } from '../../../components/BuscadorCliente';
+import { ModalRegistrarCliente } from '../../../components/ModalRegistrarCliente';
+import type { Cliente } from '../../../services/cliente.service';
+import { asignarClienteAVenta, desasignarClienteDeVenta } from '../../../services/cliente.service';
+import { guardarProductosVenta, obtenerTotalesVenta, actualizarMetodoPago, confirmarVenta } from '../../../services/venta-productos.service';
+import { aplicarMejorDescuento } from '../../../services/descuento.service';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -746,4 +746,8 @@ export function PaginaVentaDirecta() {
       />
     </div>
   );
+}
+
+function cargarTotales() {
+  throw new Error('Function not implemented.');
 }
