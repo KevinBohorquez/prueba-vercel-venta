@@ -1,4 +1,3 @@
-// src/pages/PaginaNoEncontrada.tsx
 import { Link } from 'react-router-dom';
 
 export function PaginaNoEncontrada() {
@@ -11,8 +10,8 @@ export function PaginaNoEncontrada() {
       <p className="text-gray-500 mt-2">
         Lo sentimos, la página que buscas no existe.
       </p>
-      <Link 
-        to="/" 
+      <Link
+        to="/"
         className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
       >
         Volver al Inicio

@@ -2,19 +2,18 @@ package com.venta.backend.venta.impl;
 
 import com.venta.backend.venta.dto.request.AgregarItemVentaRequest;
 import com.venta.backend.venta.dto.request.CrearVentaDirectaRequest;
+import com.venta.backend.venta.dto.request.GuardarProductosRequest;
 import com.venta.backend.venta.dto.response.VentaResumenResponse;
-import com.venta.backend.venta.exceptions.ItemProductoNoEncontradoException;
 import com.venta.backend.venta.exceptions.VentaNoEncontradaException;
 import com.venta.backend.venta.exceptions.VentaOperacionNoPermitidaException;
 import com.venta.backend.venta.factory.VentaFactoryResolver;
 import com.venta.backend.venta.mappers.IVentaMapper;
 import com.venta.backend.venta.servicios.IVentaCarritoService;
-import com.venta.backend.venta.entities.ItemProducto;
 import com.venta.backend.venta.entities.Venta;
 import com.venta.backend.venta.entities.DetalleVenta;
 import com.venta.backend.venta.enums.OrigenVenta;
 import com.venta.backend.venta.enums.VentaEstado;
-import com.venta.backend.venta.repository.ItemProductoRepositorio;
+import com.venta.backend.venta.repository.VentaRepositorio;
 import com.venta.backend.venta.repository.VentaRepositorio;
 import com.venta.backend.venta.repository.DetalleVentaRepositorio;
 import com.venta.backend.vendedor.infraestructura.repository.VendedorRepositorio;
@@ -22,23 +21,29 @@ import com.venta.backend.cotizacion.repository.CotizacionRepository;
 import com.venta.backend.cotizacion.model.Cotizacion;
 import com.venta.backend.cotizacion.model.DetalleCotizacion;
 import com.venta.backend.cotizacion.exception.CotizacionNotFoundException;
+import com.venta.backend.cliente.infraestructura.repository.ClienteRepositorio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
+import com.venta.backend.venta.pdf.VentaPdfTemplate;
+import com.venta.backend.cotizacion.infraestructura.pdf.IPdfGenerator;
 
 @Service
 @RequiredArgsConstructor
 public class VentaCarritoServiceImpl implements IVentaCarritoService {
 
     private final VentaRepositorio ventaRepositorio;
-    private final ItemProductoRepositorio itemProductoRepositorio;
     private final DetalleVentaRepositorio detalleVentaRepositorio;
     private final VentaFactoryResolver ventaFactoryResolver;
     private final VendedorRepositorio vendedorRepositorio;
     private final CotizacionRepository cotizacionRepository;
+    private final ClienteRepositorio clienteRepositorio;
+    private final VentaPdfTemplate ventaPdfTemplate;
+    private final IPdfGenerator pdfGenerator;
     @Qualifier("IVentaMapper")
     private final IVentaMapper ventaMapper;
 
@@ -65,10 +70,13 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
             throw new VentaOperacionNoPermitidaException("Solo se puede modificar una venta en estado borrador.");
         }
 
-        ItemProducto producto = itemProductoRepositorio.findById(request.getItemProductoId())
-                .orElseThrow(() -> new ItemProductoNoEncontradoException(request.getItemProductoId()));
-
-        venta.agregarOActualizarItem(producto, request.getCantidad());
+        venta.agregarOActualizarItem(
+            request.getProductoId(), 
+            request.getNombreProducto(), 
+            request.getPrecioUnitario(), 
+            request.getCantidad()
+        );
+        
         Venta guardada = ventaRepositorio.save(venta);
         return ventaMapper.toResumen(guardada);
     }
@@ -82,11 +90,32 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         VentaResumenResponse resumen = ventaMapper.toResumen(venta);
         
         // Obtener nombre del vendedor si está asignado
+        String nombreVendedor = null;
         if (venta.getIdVendedor() != null) {
-            String nombreVendedor = vendedorRepositorio.findById(venta.getIdVendedor())
+            nombreVendedor = vendedorRepositorio.findById(venta.getIdVendedor())
                     .map(vendedor -> vendedor.getFirstName() + " " + vendedor.getLastName())
                     .orElse(null);
-            
+        }
+        
+        // Obtener nombre del cliente si está asignado
+        String nombreCliente = null;
+        String clienteDni = null;
+        String clienteEmail = null;
+        String clienteTelefono = null;
+        
+        if (venta.getClienteId() != null) {
+            var clienteOpt = clienteRepositorio.findById(venta.getClienteId());
+            if (clienteOpt.isPresent()) {
+                var cliente = clienteOpt.get();
+                nombreCliente = cliente.getFirstName() + " " + cliente.getLastName();
+                clienteDni = cliente.getDni();
+                clienteEmail = cliente.getEmail();
+                clienteTelefono = cliente.getPhoneNumber();
+            }
+        }
+        
+        // Si hay vendedor o cliente, reconstruir el response
+        if (nombreVendedor != null || nombreCliente != null) {
             return VentaResumenResponse.builder()
                     .ventaId(resumen.getVentaId())
                     .numVenta(resumen.getNumVenta())
@@ -97,6 +126,11 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
                     .total(resumen.getTotal())
                     .idVendedor(resumen.getIdVendedor())
                     .nombreVendedor(nombreVendedor)
+                    .clienteId(resumen.getClienteId())
+                    .nombreCliente(nombreCliente)
+                    .clienteDni(clienteDni)
+                    .clienteEmail(clienteEmail)
+                    .clienteTelefono(clienteTelefono)
                     .items(resumen.getItems())
                     .build();
         }
@@ -152,15 +186,15 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
 
         Venta ventaGuardada = ventaRepositorio.save(venta);
 
-        // 3. Copiar productos de DetalleCotizacion a ItemProducto
+        // 3. Copiar productos de DetalleCotizacion a DetalleVenta
         BigDecimal subtotalCalculado = BigDecimal.ZERO;
         BigDecimal descuentoTotalCalculado = BigDecimal.ZERO;
 
         for (DetalleCotizacion detalle : cotizacion.getItems()) {
             DetalleVenta detalleVenta = DetalleVenta.builder()
                     .venta(ventaGuardada)
-                    .itemProducto(itemProductoRepositorio.findById(detalle.getItemProductoId())
-                            .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + detalle.getItemProductoId())))
+                    .idProducto(detalle.getItemProductoId())
+                    .nombreProducto("Producto " + detalle.getItemProductoId()) // Placeholder - actualizar DetalleCotizacion para incluir nombre
                     .cantidad(detalle.getCantidad())
                     .precioUnitario(detalle.getPrecioUnitario())
                     .descuentoMonto(detalle.getDescuentoMonto())
@@ -192,6 +226,135 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
         venta.setClienteId(clienteId);
         ventaRepositorio.save(venta);
     }
+    
+    @Override
+    @Transactional
+    public void desasignarCliente(Long ventaId) {
+        Venta venta = ventaRepositorio.findById(ventaId)
+                .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
+        
+        venta.setClienteId(null);
+        ventaRepositorio.save(venta);
+    }
+    
+    @Override
+    @Transactional
+    public void guardarProductos(Long ventaId, List<GuardarProductosRequest.ProductoCarrito> productosCarrito) {
+        Venta venta = ventaRepositorio.findById(ventaId)
+                .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
+        
+        if (!venta.esBorrador()) {
+            throw new VentaOperacionNoPermitidaException("Solo se puede modificar una venta en estado borrador.");
+        }
+        
+        // 1. Obtener detalles actuales de la BD
+        List<DetalleVenta> detallesActuales = venta.getDetalles();
+        
+        // 2. Crear mapa de productos del carrito (frontend)
+        java.util.Map<Long, com.venta.backend.venta.dto.request.GuardarProductosRequest.ProductoCarrito> carritoMap = 
+            productosCarrito.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                    p -> p.getIdProducto(),
+                    p -> p
+                ));
+        
+        // 3. Actualizar o eliminar detalles existentes
+        java.util.Iterator<DetalleVenta> iterator = detallesActuales.iterator();
+        while (iterator.hasNext()) {
+            DetalleVenta detalle = iterator.next();
+            Long idProducto = detalle.getIdProducto();
+            
+            if (carritoMap.containsKey(idProducto)) {
+                // Producto existe en carrito → ACTUALIZAR cantidad
+                var productoCarrito = carritoMap.get(idProducto);
+                detalle.actualizarCantidad(productoCarrito.getCantidad());
+                carritoMap.remove(idProducto); // Ya procesado
+            } else {
+                // Producto NO existe en carrito → ELIMINAR
+                iterator.remove();
+                detalleVentaRepositorio.delete(detalle);
+            }
+        }
+        
+        // 4. Insertar nuevos productos que están en carrito pero no en BD
+        for (var productoCarrito : carritoMap.values()) {
+            DetalleVenta nuevoDetalle = DetalleVenta.nuevoDetalle(
+                venta,
+                productoCarrito.getIdProducto(),
+                productoCarrito.getNombreProducto(),
+                productoCarrito.getPrecioUnitario(),
+                productoCarrito.getCantidad()
+            );
+            detallesActuales.add(nuevoDetalle);
+        }
+        
+        // 5. Recalcular totales
+        venta.recalcularMontos();
+        
+        // 6. Guardar venta (cascade guarda detalles)
+        ventaRepositorio.save(venta);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public VentaResumenResponse calcularTotales(Long ventaId) {
+        return obtenerResumen(ventaId);
+    }
+    
+    @Override
+    @Transactional
+    public void actualizarMetodoPago(Long ventaId, String metodoPago) {
+        Venta venta = ventaRepositorio.findById(ventaId)
+                .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
+        
+        try {
+            venta.setMetodoPago(com.venta.backend.venta.enums.MetodoPago.valueOf(metodoPago.toUpperCase()));
+            ventaRepositorio.save(venta);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Método de pago inválido: " + metodoPago);
+        }
+    }
+    
+    @Override
+    @Transactional
+    public void confirmarVenta(Long ventaId) {
+        Venta venta = ventaRepositorio.findById(ventaId)
+                .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
+        
+        // Validación 1: Solo se puede confirmar una venta en borrador
+        if (!venta.esBorrador()) {
+            throw new VentaOperacionNoPermitidaException("Solo se puede confirmar una venta en estado borrador.");
+        }
+        
+        // Validación 2: Debe tener vendedor asignado
+        if (venta.getIdVendedor() == null) {
+            throw new VentaOperacionNoPermitidaException("La venta debe tener un vendedor asignado.");
+        }
+        
+        // Validación 3: Debe tener cliente asignado
+        if (venta.getClienteId() == null) {
+            throw new VentaOperacionNoPermitidaException("La venta debe tener un cliente asignado.");
+        }
+        
+        // Validación 4: Debe tener método de pago
+        if (venta.getMetodoPago() == null) {
+            throw new VentaOperacionNoPermitidaException("La venta debe tener un método de pago asignado.");
+        }
+        
+        // Validación 5: Debe tener al menos 1 producto
+        if (venta.getDetalles() == null || venta.getDetalles().isEmpty()) {
+            throw new VentaOperacionNoPermitidaException("La venta debe tener al menos un producto.");
+        }
+        
+        // Recalcular totales finales
+        venta.recalcularMontos();
+        
+        // Cambiar estado a CONFIRMADA
+        venta.setEstado(VentaEstado.CONFIRMADA);
+        
+        // Guardar venta
+        ventaRepositorio.save(venta);
+    }
 
     private String generarCodigoVenta(OrigenVenta origenVenta) {
         String prefijoTipo;
@@ -212,6 +375,32 @@ public class VentaCarritoServiceImpl implements IVentaCarritoService {
                     return prefijo + String.format("%06d", numero + 1);
                 })
                 .orElse(prefijo + "000001");
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] generarPdfVenta(Long ventaId) {
+        // 1. Obtener venta
+        Venta venta = ventaRepositorio.findById(ventaId)
+                .orElseThrow(() -> new VentaNoEncontradaException(ventaId));
+        
+        // 2. Obtener cliente
+        com.venta.backend.cliente.entities.Cliente cliente = null;
+        if (venta.getClienteId() != null) {
+            cliente = clienteRepositorio.findById(venta.getClienteId()).orElse(null);
+        }
+        
+        // 3. Obtener vendedor
+        com.venta.backend.vendedor.entities.Vendedor vendedor = null;
+        if (venta.getIdVendedor() != null) {
+            vendedor = vendedorRepositorio.findById(venta.getIdVendedor()).orElse(null);
+        }
+        
+        // 4. Generar HTML
+        String htmlContent = ventaPdfTemplate.generateHtml(venta, cliente, vendedor);
+        
+        // 5. Generar PDF
+        return pdfGenerator.generatePdf(htmlContent);
     }
 }
 

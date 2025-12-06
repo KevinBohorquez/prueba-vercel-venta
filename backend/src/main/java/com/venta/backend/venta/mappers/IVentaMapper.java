@@ -17,14 +17,20 @@ public interface IVentaMapper {
     @Mapping(target = "items", source = "detalles")
     @Mapping(target = "idVendedor", source = "idVendedor")
     @Mapping(target = "nombreVendedor", ignore = true)
+    @Mapping(target = "clienteId", source = "clienteId")
+    @Mapping(target = "nombreCliente", ignore = true)
+    @Mapping(target = "clienteDni", ignore = true)
+    @Mapping(target = "clienteEmail", ignore = true)
+    @Mapping(target = "clienteTelefono", ignore = true)
     VentaResumenResponse toResumen(Venta venta);
 
 
     @Mapping(target = "detalleId", source = "id")
-    @Mapping(target = "itemProductoId", source = "itemProducto.id")
-    @Mapping(target = "nombreProducto", source = "itemProducto.nombre")
+    @Mapping(target = "itemProductoId", source = "idProducto")
+    @Mapping(target = "nombreProducto", source = "nombreProducto")
     LineaCarritoResponse toLinea(DetalleVenta detalle);
 
+    @Mapping(target = "nombreCliente", ignore = true)
     VentaListadoResponse toListado(Venta venta);
 }
 

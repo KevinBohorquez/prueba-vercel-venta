@@ -178,8 +178,8 @@ export function PaginaCombos() {
                   key={label}
                   onClick={() => setSelectedCategory(value as TipoProducto | null)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md transition-all ${selectedCategory === value
-                      ? 'bg-blue-100 border-2 border-blue-500 text-blue-700'
-                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? 'bg-blue-100 border-2 border-blue-500 text-blue-700'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                 >
                   <div className="flex items-center gap-2">
@@ -237,8 +237,8 @@ export function PaginaCombos() {
               onClick={handleCrearCombo}
               disabled={productosSeleccionados.length === 0 || !comboName.trim() || isSaving}
               className={`w-full py-3 rounded-md font-semibold transition-all ${productosSeleccionados.length === 0 || !comboName.trim() || isSaving
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
                 }`}
             >
               {isSaving ? 'Creando...' : '+ Crear Combo'}
@@ -299,8 +299,8 @@ export function PaginaCombos() {
                       key={producto.id}
                       onClick={() => handleToggleProduct(producto.id)}
                       className={`relative bg-white rounded-lg border-2 p-4 cursor-pointer transition-all ${producto.seleccionado
-                          ? 'border-blue-500 bg-blue-50 shadow-lg'
-                          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                        ? 'border-blue-500 bg-blue-50 shadow-lg'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                         }`}
                     >
                       {/* Checkbox y Badge de Descuento */}
@@ -319,9 +319,20 @@ export function PaginaCombos() {
                         </div>
                       </div>
 
-                      {/* Icono del producto */}
-                      <div className="aspect-[4/3] w-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-3 flex items-center justify-center">
-                        <Package size={48} className="text-gray-400" />
+                      {/* Imagen del producto */}
+                      <div className="aspect-[4/3] w-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                        {producto.imagenUrl ? (
+                          <img
+                            src={producto.imagenUrl.startsWith('http') ? producto.imagenUrl : `http://localhost:8080${producto.imagenUrl}`}
+                            alt={producto.nombre}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <Package size={48} className="text-gray-400" />
+                        )}
                       </div>
 
                       {/* Info del producto */}

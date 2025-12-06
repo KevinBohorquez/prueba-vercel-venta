@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ConfirmCancelModal } from '../components/ConfirmCancelModal';
 import { ProductCatalogModal } from '../components/ProductCatalogModal';
@@ -6,7 +6,11 @@ import SellerDisplayWidget from '../modules/vendedor/components/SellerDisplayWid
 import type { VendedorResponse } from '../modules/vendedor/types/Vendedor';
 import type { Product } from '../components/ProductCatalogModal';
 import { BuscadorCliente } from '../components/BuscadorCliente';
+import { ModalRegistrarCliente } from '../components/ModalRegistrarCliente';
 import type { Cliente } from '../services/cliente.service';
+import { asignarClienteAVenta, desasignarClienteDeVenta } from '../services/cliente.service';
+import { guardarProductosVenta, obtenerTotalesVenta, actualizarMetodoPago, confirmarVenta } from '../services/venta-productos.service';
+import { aplicarMejorDescuento } from '../services/descuento.service';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -55,7 +59,7 @@ interface LineaCarritoApi {
   subtotal: number;
 }
 
-interface VentaResumenApi {
+export interface VentaResumenApi {
   ventaId: number;
   numVenta?: string;
   origen: 'DIRECTA' | 'LEAD' | 'COTIZACION';
@@ -65,6 +69,11 @@ interface VentaResumenApi {
   total: number;
   idVendedor?: number;
   nombreVendedor?: string;
+  clienteId?: number;
+  nombreCliente?: string;
+  clienteDni?: string;
+  clienteEmail?: string;
+  clienteTelefono?: string;
   items: LineaCarritoApi[];
 }
 
@@ -98,6 +107,10 @@ export function PaginaVentaDirecta() {
   const [numVenta, setNumVenta] = useState<string>('');
   const [asignandoVendedor, setAsignandoVendedor] = useState(false);
   const [vendedorAsignado, setVendedorAsignado] = useState<{ id: number, nombre: string } | null>(null);
+  const [resumen, setResumen] = useState<VentaResumenApi | null>(null);
+  const [modalRegistroClienteOpen, setModalRegistroClienteOpen] = useState(false);
+  const [codigoCupon, setCodigoCupon] = useState('');
+  const [mensajeDescuento, setMensajeDescuento] = useState<string | null>(null);
 
   // --- Carga Inicial de Datos ---
   useEffect(() => {
@@ -124,6 +137,7 @@ export function PaginaVentaDirecta() {
         setDescuentoApi(data.descuentoTotal);
         //setTotalApi(data.total);
         setNumVenta(data.numVenta || `VENTA-${data.ventaId}`);
+        setResumen(data); // Guardar resumen completo
 
         // Cargar vendedor asignado si existe
         if (data.idVendedor && data.nombreVendedor) {
@@ -132,6 +146,17 @@ export function PaginaVentaDirecta() {
             nombre: data.nombreVendedor
           });
           setSellerIdInput(data.idVendedor);
+        }
+
+        // Cargar cliente asignado si existe
+        if (data.clienteId && data.nombreCliente) {
+          setClienteSeleccionado({
+            id: data.clienteId,
+            nombre: data.nombreCliente,
+            dni: data.clienteDni || '',
+            telefono: data.clienteTelefono || '',
+            email: data.clienteEmail || ''
+          });
         }
       } catch (e) {
         console.error(e);
@@ -206,9 +231,60 @@ export function PaginaVentaDirecta() {
     }
   };
 
-  const handleEliminarCliente = () => {
-    setClienteSeleccionado(null);
-    setBusquedaCliente('');
+  const handleEliminarCliente = async () => {
+    if (!ventaId) return;
+
+    try {
+      await desasignarClienteDeVenta(Number(ventaId));
+      setClienteSeleccionado(null);
+      setBusquedaCliente('');
+      alert('Cliente eliminado exitosamente');
+    } catch (error) {
+      console.error('Error al eliminar cliente:', error);
+      alert('Error al eliminar cliente de la venta');
+    }
+  };
+
+  const handleAplicarDescuento = async () => {
+    if (!ventaId) {
+      alert('No hay venta activa');
+      return;
+    }
+    if (!clienteSeleccionado) {
+      alert('Debe asignar un cliente antes de aplicar descuentos');
+      return;
+    }
+    try {
+      const response = await aplicarMejorDescuento({
+        ventaId: ventaId,
+        dniCliente: clienteSeleccionado.dni,
+        codigoCupon: codigoCupon || null
+      });
+      setMensajeDescuento(`✓ ${response.mensaje} - Descuento: S/ ${response.montoDescontado.toFixed(2)}`);
+      await cargarTotales();
+      setTimeout(() => setMensajeDescuento(null), 5000);
+    } catch (error) {
+      console.error('Error al aplicar descuento:', error);
+      alert('Error al aplicar descuento');
+    }
+  };
+  const handleClienteRegistrado = async (cliente: Cliente) => {
+    if (!ventaId) return;
+
+    try {
+      await asignarClienteAVenta(Number(ventaId), cliente.clienteId);
+      setClienteSeleccionado({
+        id: cliente.clienteId,
+        nombre: cliente.fullName,
+        dni: cliente.dni,
+        telefono: cliente.phoneNumber || 'N/A',
+        email: cliente.email
+      });
+      alert('Cliente registrado y asignado exitosamente');
+    } catch (error) {
+      console.error('Error al asignar cliente:', error);
+      alert('Error al asignar cliente a la venta');
+    }
   };
 
   const handleAsignarVendedor = async () => {
@@ -236,6 +312,82 @@ export function PaginaVentaDirecta() {
       alert('Ocurrió un error al asignar el vendedor.');
     } finally {
       setAsignandoVendedor(false);
+    }
+  };
+
+  const handleGuardarProductos = async () => {
+    if (!ventaId || !resumen) return;
+
+    try {
+      // Convertir productos del estado local al formato esperado por el backend
+      const productosParaGuardar = productos.map(prod => ({
+        idProducto: Number(prod.codigo),
+        nombreProducto: prod.nombre,
+        precioUnitario: prod.precioUnitario,
+        cantidad: prod.cantidad
+      }));
+
+      await guardarProductosVenta(Number(ventaId), productosParaGuardar);
+      alert('Productos guardados exitosamente');
+
+      // Recargar totales y productos desde el backend
+      const totales = await obtenerTotalesVenta(Number(ventaId));
+      setDescuentoApi(totales.descuentoTotal);
+      setResumen(totales);
+
+      // Actualizar productos desde el backend para sincronizar IDs
+      const mappedProductos: ProductoVenta[] = totales.items.map((item) => ({
+        id: String(item.detalleId ?? item.itemProductoId),
+        codigo: String(item.itemProductoId),
+        nombre: item.nombreProducto,
+        precioUnitario: item.precioUnitario,
+        cantidad: item.cantidad,
+      }));
+      setProductos(mappedProductos);
+    } catch (error) {
+      console.error('Error al guardar productos:', error);
+      alert('Error al guardar productos');
+    }
+  };
+
+  const handleConfirmarVenta = async () => {
+    if (!ventaId) return;
+
+    // Validaciones en frontend
+    if (!vendedorAsignado) {
+      alert('Debe asignar un vendedor antes de confirmar la venta');
+      return;
+    }
+
+    if (!clienteSeleccionado) {
+      alert('Debe asignar un cliente antes de confirmar la venta');
+      return;
+    }
+
+    if (!resumen || !resumen.items || resumen.items.length === 0) {
+      alert('Debe agregar al menos un producto antes de confirmar la venta');
+      return;
+    }
+
+    try {
+      await confirmarVenta(Number(ventaId));
+      alert('¡Venta confirmada exitosamente!');
+      navigate('/ventas');
+    } catch (error: any) {
+      console.error('Error al confirmar venta:', error);
+      alert(error.message || 'Error al confirmar venta');
+    }
+  };
+
+  const handleActualizarMetodoPago = async (metodo: 'EFECTIVO' | 'TARJETA') => {
+    if (!ventaId) return;
+
+    try {
+      await actualizarMetodoPago(Number(ventaId), metodo);
+      alert(`Método de pago actualizado a ${metodo}`);
+    } catch (error) {
+      console.error('Error al actualizar método de pago:', error);
+      alert('Error al actualizar método de pago');
     }
   };
 
@@ -272,7 +424,7 @@ export function PaginaVentaDirecta() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-gray-800">Cliente</h2>
               <div className="flex gap-2">
-                <button className="bg-[#3C83F6] hover:bg-blue-600 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors">
+                <button onClick={() => setModalRegistroClienteOpen(true)} className="bg-[#3C83F6] hover:bg-blue-600 text-white px-4 py-2 rounded text-sm flex items-center font-medium transition-colors">
                   <span className="mr-1 text-lg leading-none">+</span> Registrar cliente
                 </button>
                 {clienteSeleccionado ? (
@@ -295,14 +447,30 @@ export function PaginaVentaDirecta() {
             </div>
 
             <BuscadorCliente
-              onClienteSeleccionado={(cliente: Cliente) => {
-                setClienteSeleccionado({
-                  id: cliente.clienteId,
-                  nombre: cliente.fullName,
-                  dni: cliente.dni,
-                  telefono: cliente.phoneNumber || 'N/A',
-                  email: cliente.email
-                });
+              onClienteSeleccionado={async (cliente: Cliente) => {
+                if (!ventaId) {
+                  alert('Error: No hay venta activa');
+                  return;
+                }
+
+                try {
+                  // Llamar al endpoint para asignar cliente
+                  await asignarClienteAVenta(Number(ventaId), cliente.clienteId);
+
+                  // Actualizar estado local
+                  setClienteSeleccionado({
+                    id: cliente.clienteId,
+                    nombre: cliente.fullName,
+                    dni: cliente.dni,
+                    telefono: cliente.phoneNumber || 'N/A',
+                    email: cliente.email
+                  });
+
+                  alert('Cliente asignado exitosamente');
+                } catch (error) {
+                  console.error('Error al asignar cliente:', error);
+                  alert('Error al asignar cliente a la venta');
+                }
               }}
               clienteInicial={null}
             />
@@ -436,7 +604,11 @@ export function PaginaVentaDirecta() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Método de Pago</label>
               <select
                 value={metodoPago}
-                onChange={(e) => setMetodoPago(e.target.value as 'EFECTIVO' | 'TARJETA')}
+                onChange={(e) => {
+                  const metodo = e.target.value as 'EFECTIVO' | 'TARJETA';
+                  setMetodoPago(metodo);
+                  handleActualizarMetodoPago(metodo);
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 <option value="EFECTIVO">Efectivo</option>
@@ -447,25 +619,52 @@ export function PaginaVentaDirecta() {
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <h3 className="font-bold text-gray-800 mb-3">Descuentos y Cupones</h3>
+
+            {mensajeDescuento && (
+              <div className="mb-3 p-3 bg-green-50 border border-green-200 text-green-700 rounded text-sm">
+                {mensajeDescuento}
+              </div>
+            )}
+
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Ingresar código de cupón"
+                value={codigoCupon}
+                onChange={(e) => setCodigoCupon(e.target.value)}
+                placeholder="Ingresar código de cupón (opcional)"
                 className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              <button className="px-4 py-2 border border-gray-300 text-blue-600 rounded hover:bg-gray-50 text-sm font-medium transition-colors">
+              <button
+                onClick={handleAplicarDescuento}
+                className="px-4 py-2 border border-gray-300 text-blue-600 rounded hover:bg-gray-50 text-sm font-medium transition-colors"
+              >
                 Aplicar
               </button>
             </div>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col gap-3">
-            <button className="w-full py-3 bg-[#3C83F6] hover:bg-blue-600 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors">
+            <button
+              onClick={handleGuardarProductos}
+              className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+              </svg>
+              Guardar Productos
+            </button>
+
+
+            <button
+              onClick={handleConfirmarVenta}
+              className="w-full py-3 bg-[#3C83F6] hover:bg-blue-600 text-white font-medium rounded shadow-sm flex justify-center items-center gap-2 transition-colors"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
               </svg>
               Confirmar Venta
             </button>
+
 
             {/* Botón Cancelar con Fondo Rojo */}
             <button
@@ -539,7 +738,16 @@ export function PaginaVentaDirecta() {
         onClose={() => setIsCatalogOpen(false)}
         onAddProduct={handleAddProductFromModal}
       />
-
+      {/* Modal Registrar Cliente */}
+      <ModalRegistrarCliente
+        isOpen={modalRegistroClienteOpen}
+        onClose={() => setModalRegistroClienteOpen(false)}
+        onClienteRegistrado={handleClienteRegistrado}
+      />
     </div>
   );
+}
+
+function cargarTotales() {
+  throw new Error('Function not implemented.');
 }

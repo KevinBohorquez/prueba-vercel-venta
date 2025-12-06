@@ -3,17 +3,20 @@ import { X, Search, ShoppingCart, Info, Filter, CheckSquare, Square, Package } f
 import { ProductoService, type ProductoDisponible } from '../modules/producto/services/producto.service';
 import type { ProductoDTO } from '../modules/producto/types/product.types';
 
-// Tipos para el catálogo
 export interface Product {
   id: string;
   name: string;
   price: number;
-  priceOriginal?: number; // Para combos: precio sin descuento
+  priceOriginal?: number;
   stock?: number;
   image: string;
   category: 'Equipo' | 'Servicio' | 'Combo';
   isCombo?: boolean;
   rating?: number;
+  // Campos adicionales para compatibilidad
+  codigo: string;
+  nombre: string;
+  precio: number;
 }
 
 // Función para mapear el tipo del backend a la categoría del frontend
@@ -30,21 +33,29 @@ const convertirProductoDisponible = (producto: ProductoDisponible): Product => (
   name: producto.nombre,
   price: producto.precioBase,
   stock: producto.stock,
-  image: '', // Sin imagen
+  image: producto.imagenUrl || '',
   category: mapearTipoACategoria(producto.tipo),
   isCombo: false,
+  // Campos adicionales
+  codigo: producto.codigo || producto.id.toString(),
+  nombre: producto.nombre,
+  precio: producto.precioBase,
 });
 
 // Función para convertir ProductoDTO (combos) a Product
 const convertirComboAProduct = (combo: any): Product => ({
   id: combo.id.toString(),
   name: combo.nombre,
-  price: combo.precioFinal,  // Precio con descuento
-  priceOriginal: combo.precioBase,  // Precio sin descuento
+  price: combo.precioFinal,
+  priceOriginal: combo.precioBase,
   stock: combo.stock ?? 1,
-  image: '',
+  image: combo.imagenUrl || '',
   category: 'Combo',
   isCombo: true,
+  // Campos adicionales
+  codigo: combo.codigo || combo.id.toString(),
+  nombre: combo.nombre,
+  precio: combo.precioFinal,
 });
 
 interface ProductCatalogModalProps {
@@ -268,9 +279,19 @@ export const ProductCatalogModal: React.FC<ProductCatalogModalProps> = ({ isOpen
                       {product.category}
                     </span>
 
-                    {/* Imagen - Placeholder sin cargar imágenes externas */}
+
+                    {/* Imagen del Producto */}
                     <div className="aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 relative border-b border-gray-100 flex items-center justify-center">
-                      <Package size={48} className="text-gray-400" />
+                      {product.image ? (
+                        <img
+                          src={product.image.startsWith('http') ? product.image : `http://localhost:8080${product.image}`}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : null}
                     </div>
 
                     {/* Info del Producto */}
@@ -450,6 +471,9 @@ export const ProductCatalogModal: React.FC<ProductCatalogModalProps> = ({ isOpen
                         image: '',
                         category: 'Combo',
                         isCombo: true,
+                        codigo: '',
+                        nombre: '',
+                        precio: 0
                       });
                       handleCloseComboDetails();
                     }}

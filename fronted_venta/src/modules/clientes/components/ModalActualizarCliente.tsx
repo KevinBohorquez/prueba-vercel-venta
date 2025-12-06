@@ -123,11 +123,6 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
     }
   };
 
-  const handleDesactivar = () => {
-    if (!confirm('¿Seguro que deseas desactivar este cliente?')) return;
-    setFormData((prev) => ({ ...prev, estado: 'INACTIVO' }));
-  };
-
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -151,7 +146,7 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
       <div className="bg-white w-full max-w-5xl rounded-2xl shadow-xl overflow-hidden flex flex-col" style={{ height: '85vh' }}>
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-2xl font-semibold text-gray-900">Actualizar Cliente</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">Actualizar cliente</h2>
           <button className="text-gray-500 text-xl font-bold" onClick={onClose}>
             ×
           </button>
@@ -443,18 +438,11 @@ export function ModalActualizarCliente({ clienteId, onClose, onSuccess }: Props)
               Cancelar
             </button>
             <button
-              className="px-5 py-2 rounded-lg bg-red-100 text-red-700 border border-red-200"
-              onClick={handleDesactivar}
-              type="button"
-            >
-              Desactivar Cliente
-            </button>
-            <button
               className="px-5 py-2 rounded-lg bg-blue-500 text-white"
               onClick={handleGuardar}
               disabled={saving}
             >
-              {saving ? 'Guardando...' : 'Guardar Cambios'}
+              {saving ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </div>
         </div>

@@ -37,4 +37,15 @@ springdoc:
   show-actuator: false
 sendgrid:
   api:
-    key: ${SENDGRID_API_KEY}
+    key: ${SENDGRID_API_KEY:}
+
+logging:
+  file:
+    name: logs/backend.log
+    max-size: 10MB
+
+  level:
+    # Nivel Raíz (Mantener limpio el ruido de Spring Framework)
+    root: WARN
+
+    com.venta.backend: INFO

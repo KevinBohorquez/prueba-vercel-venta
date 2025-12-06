@@ -3,14 +3,7 @@ package com.venta.backend.venta.controller;
 import com.venta.backend.venta.dto.request.AgregarItemVentaRequest;
 import com.venta.backend.venta.dto.request.CrearVentaDirectaRequest;
 import com.venta.backend.venta.dto.request.CrearVentaLeadRequest;
-import com.venta.backend.venta.dto.response.VentaResumenResponse;
-import com.venta.backend.venta.dto.response.VentaListadoResponse;
-import com.venta.backend.venta.dto.response.VentaLeadResponse;
-import com.venta.backend.venta.dto.response.VentaLeadPendienteResponse;
-import com.venta.backend.venta.dto.response.VentaLeadDetalleResponse;
-import com.venta.backend.venta.dto.response.BoletaResponse;
-import com.venta.backend.venta.dto.response.BoletaClienteResponse;
-import com.venta.backend.venta.dto.response.VentaPaginadaResponse;
+import com.venta.backend.venta.dto.response.*;
 import com.venta.backend.venta.servicios.IVentaCarritoService;
 import com.venta.backend.venta.servicios.IVentaConsultaService;
 import com.venta.backend.venta.servicios.VentaLeadService;
@@ -24,7 +17,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Ventas", description = "API para gestión de ventas directas y desde leads")
 @RequestMapping("/api/venta")
@@ -131,6 +127,18 @@ public class VentaController {
             @Parameter(description = "ID del cliente a asignar") @PathVariable Long clienteId) {
         ventaCarritoService.asignarCliente(ventaId, clienteId);
     }
+    
+    @Operation(summary = "Desasignar cliente de venta", description = "Elimina la asignación del cliente de una venta existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Cliente desasignado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @DeleteMapping("/{ventaId}/cliente")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void desasignarCliente(
+            @Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        ventaCarritoService.desasignarCliente(ventaId);
+    }
 
     @Operation(summary = "Crear venta desde lead de marketing", description = "Crea una nueva venta a partir de un lead generado por marketing")
     @ApiResponses(value = {
@@ -168,5 +176,76 @@ public class VentaController {
     public java.util.List<BoletaClienteResponse> obtenerBoletasPorCliente(
             @Parameter(description = "ID del cliente") @PathVariable Long clienteId) {
         return boletaService.obtenerBoletasPorCliente(clienteId);
+    }
+    
+    @Operation(summary = "Guardar productos de la venta", description = "Sincroniza el carrito del frontend con la base de datos (insert/update/delete) y recalcula totales")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Productos guardados exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Venta no es borrador"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @PostMapping("/{ventaId}/guardar-productos")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void guardarProductos(
+            @Parameter(description = "ID de la venta") @PathVariable Long ventaId,
+            @RequestBody com.venta.backend.venta.dto.request.GuardarProductosRequest request) {
+        ventaCarritoService.guardarProductos(ventaId, request.getProductos());
+    }
+    
+    @Operation(summary = "Calcular totales de la venta", description = "Obtiene subtotal, descuento y total calculados en tiempo real")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Totales calculados exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @GetMapping("/{ventaId}/totales")
+    public ResponseEntity<VentaResumenResponse> calcularTotales(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        return ResponseEntity.ok(ventaCarritoService.calcularTotales(ventaId));
+    }
+    
+    @Operation(summary = "Actualizar método de pago", description = "Actualiza el método de pago de la venta (EFECTIVO o TARJETA)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Método de pago actualizado exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Método de pago inválido"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @PutMapping("/{ventaId}/metodo-pago")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void actualizarMetodoPago(
+            @Parameter(description = "ID de la venta") @PathVariable Long ventaId,
+            @Parameter(description = "Método de pago (EFECTIVO o TARJETA)") @RequestParam String metodoPago) {
+        ventaCarritoService.actualizarMetodoPago(ventaId, metodoPago);
+    }
+    
+    @Operation(summary = "Confirmar venta", description = "Confirma una venta en borrador cambiando su estado a CONFIRMADA. Valida que tenga vendedor, cliente, método de pago y al menos 1 producto")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Venta confirmada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Validación fallida o venta no es borrador"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @PutMapping("/{ventaId}/confirmar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void confirmarVenta(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        ventaCarritoService.confirmarVenta(ventaId);
+    }
+    
+    @Operation(summary = "Descargar PDF de venta", description = "Genera y descarga un PDF con el detalle completo de la venta")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "PDF generado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Venta no encontrada")
+    })
+    @GetMapping("/{ventaId}/pdf")
+    public ResponseEntity<byte[]> descargarPdfVenta(@Parameter(description = "ID de la venta") @PathVariable Long ventaId) {
+        byte[] pdfBytes = ventaCarritoService.generarPdfVenta(ventaId);
+        
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=Venta_" + ventaId + ".pdf")
+                .body(pdfBytes);
+    }
+    
+    @Operation(summary = "Obtener ventas agregadas por canal (Físico vs. Llamada)")
+    @GetMapping("/analisis/ventas-por-canal")
+    public ResponseEntity<List<VentasPorCanalResponse>> obtenerVentasPorCanal() {
+        return ResponseEntity.ok(ventaConsultaService.obtenerVentasPorCanal());
     }
 }
