@@ -15,31 +15,6 @@ interface ProductoSeleccionable extends ProductoDTO {
 
 const API_BASE_URL = 'http://localhost:8080/api/productos';
 
-// Función para obtener imagen según el tipo de producto
-const getProductImage = (producto: ProductoDTO): string => {
-  // Si el producto tiene imagen propia desde el backend, úsala
-  if (producto.imagenUrl) {
-    // Si la URL es completa (http/https), úsala directamente
-    if (producto.imagenUrl.startsWith('http')) {
-      return producto.imagenUrl;
-    }
-    // Si es ruta relativa, asume que está en public/
-    return producto.imagenUrl;
-  }
-
-  // Caso contrario, usa imagen por defecto según tipo
-  switch (producto.tipo) {
-    case 'EQUIPO_MOVIL':
-      return 'https://via.placeholder.com/300x200/4F46E5/ffffff?text=Smartphone';
-    case 'SERVICIO_HOGAR':
-      return 'https://via.placeholder.com/300x200/10B981/ffffff?text=Internet+Hogar';
-    case 'SERVICIO_MOVIL':
-      return 'https://via.placeholder.com/300x200/10B981/ffffff?text=Plan+Movil';
-    default:
-      return 'https://via.placeholder.com/300x200/6B7280/ffffff?text=Producto';
-  }
-};
-
 export const CreateComboModal: React.FC<CreateComboModalProps> = ({
   isOpen,
   onClose,
@@ -78,6 +53,19 @@ export const CreateComboModal: React.FC<CreateComboModalProps> = ({
       }));
 
       setProductosDisponibles(productosValidos);
+
+      // DEBUG: Ver URLs de imágenes
+      console.log('🖼️ URLs de imágenes:', productosValidos.map(p => ({
+        nombre: p.nombre,
+        imagenUrl: p.imagenUrl
+      })));
+
+      // DEBUG: Ver si productos tienen imagenUrl
+      console.log('🔍 Productos cargados:', productosValidos.map(p => ({
+        nombre: p.nombre,
+        imagenUrl: p.imagenUrl,
+        hasImage: !!p.imagenUrl
+      })));
 
       // Advertencia en consola si hay productos sin precio
       const sinPrecio = productosValidos.filter(p => p.precioBase === 0);
@@ -334,22 +322,23 @@ export const CreateComboModal: React.FC<CreateComboModalProps> = ({
                       key={producto.id}
                       onClick={() => handleToggleProduct(producto.id)}
                       className={`group bg-white rounded-lg border-2 cursor-pointer transition-all duration-200 overflow-hidden ${producto.seleccionado
-                          ? 'border-blue-500 shadow-lg'
-                          : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
+                        ? 'border-blue-500 shadow-lg'
+                        : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
                         }`}
                     >
                       {/* Imagen del Producto */}
                       <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-                        <img
-                          src={getProductImage(producto)}
-                          alt={producto.nombre}
-                          onError={(e) => {
-                            // Fallback a imagen por defecto si falla la carga
-                            e.currentTarget.src = 'https://via.placeholder.com/300x200/6B7280/ffffff?text=Sin+Imagen';
-                          }}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+                        {producto.imagenUrl ? (
+                          <img
+                            src={producto.imagenUrl.startsWith('http') ? producto.imagenUrl : `http://localhost:8080${producto.imagenUrl}`}
+                            alt={producto.nombre}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
+
 
                         {/* Overlay con checkbox */}
                         <div className={`absolute top-3 left-3 ${producto.seleccionado ? 'bg-blue-600' : 'bg-white'} p-1.5 rounded-md shadow-md transition-colors`}>
