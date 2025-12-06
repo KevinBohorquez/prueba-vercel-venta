@@ -1,32 +1,28 @@
 import React, { useEffect, useState, type FormEvent } from 'react';
-// Importamos los tipos necesarios. Asumimos que SedeResponse y VendedorResponse están en Vendedor.ts
 import type { VendedorResponse, SedeResponse } from '../types/Vendedor';
 
-// 1. Tipos de la Sede (coincide con la entidad Sede.java)
+// Tipos de la Sede (coincide con la entidad Sede.java)
 type Sede = SedeResponse;
 
-// 2. Tipo de Datos del Formulario (Alineado a RegistroVendedorRequest.java y ModificacionVendedorRequest.java)
+// Tipo de Datos del Formulario (Alineado a RegistroVendedorRequest.java y ModificacionVendedorRequest.java)
 type SellerFormData = {
   // Datos principales
   dni: string;
   firstName: string;
   lastName: string;
   sellerType: 'INTERNAL' | 'EXTERNAL';
-  sellerBranchId: number | string; // ID de la sede seleccionada
+  sellerBranchId: number | string;
 
-  // Datos de Contacto/Dirección
   email: string;
   phoneNumber: string;
   address: string;
 
-  // Datos Bancarios/Fiscales
   bankAccount: string;
   bankName: string;
   ruc: string;
   documentType: 'DNI' | 'CE' | 'PASSPORT' | 'RUC';
 };
 
-// Estado inicial para el modo CREACIÓN
 const initialState: SellerFormData = {
   dni: '',
   firstName: '',
@@ -51,15 +47,14 @@ interface RrhhData {
   direccion: string;
   idEmpleado: number;
   documentoIdentidad: string;
-  // Agrega aquí cualquier otro campo que el RRHH DTO envíe que necesites
 }
 
-// 3. Interfaz de Props del Modal
+// Interfaz de Props del Modal
 interface CreateModalProps {
   onClose: () => void;
   onSaveSuccess: () => void;
   apiBaseUrl: string;
-  sellerDataToEdit: VendedorResponse | null; // <-- Datos para la edición
+  sellerDataToEdit: VendedorResponse | null;
 }
 
 // FUNCIÓN DE MAPEO: Convierte el DTO de la API (VendedorResponse) al estado del Formulario (SellerFormData)
@@ -88,7 +83,7 @@ export function CreateSellerModal({
   apiBaseUrl,
   sellerDataToEdit,
 }: CreateModalProps) {
-  // 4. ESTADO INICIAL
+  // ESTADO INICIAL
   const [formData, setFormData] = useState<SellerFormData>(() =>
     generateInitialState(sellerDataToEdit)
   );
@@ -110,7 +105,7 @@ export function CreateSellerModal({
   // Deshabilitar Nombres/Apellidos/DNI si estamos EDITANDO un vendedor INTERNO
   const disablePersonalData = isInternal && isEditing;
 
-  // 5. FETCH REAL DE SEDES
+  // FETCH REAL DE SEDES
   useEffect(() => {
     const fetchSedes = async () => {
       setIsSedesLoading(true);
@@ -217,15 +212,10 @@ export function CreateSellerModal({
         ...prev,
         dni: data.documentoIdentidad,
         firstName: data.nombres,
-        lastName: `${data.apellidoPaterno} ${data.apellidoMaterno}`, // Concatenamos para el formulario
+        lastName: `${data.apellidoPaterno} ${data.apellidoMaterno}`,
         email: data.email,
         phoneNumber: data.telefono,
         address: data.direccion,
-        // CLAVE: Almacenamos el ID de RRHH en el campo de referencia (employee_rrhh_id)
-        // Aunque este campo no existe en SellerFormData, lo enviamos en el request final.
-        // Para ser limpios, deberías crear un campo temporal para este ID.
-        // Por ahora, usaremos un truco en el submit, pero la DTO de Java lo tiene como employeeRrhhId
-        // Como el campo en el DTO de Vendedor es employeeRrhhId (Long), actualizaremos el form data.
         employeeRrhhId: data.idEmpleado,
       }));
 
@@ -238,7 +228,7 @@ export function CreateSellerModal({
     }
   };
 
-  // 6. SUBMIT (POST para Crear, PUT para Editar)
+  // SUBMIT (POST para Crear, PUT para Editar)
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -262,7 +252,6 @@ export function CreateSellerModal({
     const url = isEditing ? `${apiBaseUrl}/vendedores/${sellerId}` : `${apiBaseUrl}/vendedores`;
 
     try {
-      // El Request Body ya es compatible con RegistroVendedorRequest/ModificacionVendedorRequest
       const requestBody = {
         ...formData,
         sellerBranchId: formData.sellerBranchId as number, // Asegura el tipo
