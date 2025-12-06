@@ -85,7 +85,7 @@ export function PaginaCliente() {
     } catch (err: any) {
       setError(
         err?.message ||
-          `No se pudo ${nuevoEstado === 'ACTIVO' ? 'activar' : 'desactivar'} el cliente`
+        `No se pudo ${nuevoEstado === 'ACTIVO' ? 'activar' : 'desactivar'} el cliente`
       );
     }
   };
@@ -169,24 +169,11 @@ export function PaginaCliente() {
                     {cliente.phoneNumber || '—'}
                   </div>
                   <div className="col-span-1">
-                    <select
-                      value={cliente.estado || 'ACTIVO'}
-                      onChange={(e) =>
-                        handleCambiarEstado(cliente, e.target.value as 'ACTIVO' | 'INACTIVO')
-                      }
-                      className={`px-3 py-1 rounded-full text-xs font-semibold border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${getEstadoBadge(
-                        cliente.estado
-                      )}`}
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 8px center',
-                        paddingRight: '28px',
-                      }}
-                    >
-                      <option value="ACTIVO">Activo</option>
-                      <option value="INACTIVO">Inactivo</option>
-                    </select>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getEstadoBadge(
+                      cliente.estado
+                    )}`}>
+                      {cliente.estado === 'INACTIVO' ? 'Inactivo' : 'Activo'}
+                    </span>
                   </div>
                   <div className="col-span-2 flex justify-end gap-4 text-sm font-medium">
                     <button

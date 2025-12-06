@@ -10,6 +10,7 @@ import com.venta.backend.cliente.application.servicios.IClienteConsultaServicio;
 import com.venta.backend.cliente.enums.EstadoClienteEnum;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +34,7 @@ public class ClienteController {
      */
     @PostMapping("/registroClientes")
     @Operation(summary = "Registrar Cliente", description = "Crea un cliente nuevo validando DNI y deudas.")
-    public ResponseEntity<ClienteResponse> registrarCliente(@RequestBody RegistroClienteRequest request) {
+    public ResponseEntity<ClienteResponse> registrarCliente(@Valid @RequestBody RegistroClienteRequest request) {
         ClienteResponse response = adminServicio.registrarCliente(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -46,7 +47,7 @@ public class ClienteController {
     @Operation(summary = "Actualizar Cliente", description = "Actualiza datos o cambia estado.")
     public ResponseEntity<ClienteResponse> actualizarCliente(
             @PathVariable Long id,
-            @RequestBody ModificacionClienteRequest request) {
+            @Valid @RequestBody ModificacionClienteRequest request) {
         ClienteResponse response = adminServicio.actualizarCliente(id, request);
         return ResponseEntity.ok(response);
     }
