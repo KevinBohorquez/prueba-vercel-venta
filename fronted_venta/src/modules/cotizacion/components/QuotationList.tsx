@@ -10,6 +10,10 @@ interface QuotationListProps {
   onViewDetail: (id: number) => void;
   isLoading?: boolean;
   isConverting?: boolean;
+  // Pagination props
+  page?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function QuotationList({
@@ -21,6 +25,9 @@ export function QuotationList({
   onViewDetail,
   isLoading = false,
   isConverting = false,
+  page = 0,
+  totalPages = 0,
+  onPageChange,
 }: QuotationListProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -38,40 +45,48 @@ export function QuotationList({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b border-gray-200">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col h-full">
+      {/* Table - Set flex-1 to occupy available space and allow scrolling */}
+      <div className="overflow-auto flex-1">
+        <table className="w-full text-left relative border-separate border-spacing-0">
+          <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-semibold sticky top-0 z-10 shadow-sm">
             <tr>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                N° Cotización
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Cliente
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Fecha Creación
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Fecha Expiración
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado
-              </th>
-              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">
-                Acciones
-              </th>
+              <th className="px-6 py-3 bg-gray-50 border-b border-gray-200">N° Cotización</th>
+              <th className="px-6 py-3 bg-gray-50 border-b border-gray-200">Cliente</th>
+              <th className="px-6 py-3 bg-gray-50 border-b border-gray-200">Fecha Creación</th>
+              <th className="px-6 py-3 bg-gray-50 border-b border-gray-200">Fecha Expiración</th>
+              <th className="px-6 py-3 bg-gray-50 border-b border-gray-200">Total</th>
+              <th className="px-6 py-3 bg-gray-50 border-b border-gray-200">Estado</th>
+              <th className="px-6 py-3 bg-gray-50 border-b border-gray-200 text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 bg-white">
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                  Cargando cotizaciones...
+                <td colSpan={7} className="px-6 py-20 text-center text-gray-500">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <svg
+                      className="animate-spin h-8 w-8 text-blue-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span>Cargando cotizaciones...</span>
+                  </div>
                 </td>
               </tr>
             ) : quotations.length > 0 ? (
@@ -79,7 +94,7 @@ export function QuotationList({
                 <tr
                   key={q.id}
                   onClick={() => onViewDetail(q.id)}
-                  className="hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="hover:bg-blue-50/50 transition-colors cursor-pointer group"
                 >
                   <td className="px-6 py-4 font-medium text-gray-900">{q.numCotizacion}</td>
                   <td className="px-6 py-4 text-gray-700">{q.clienteNombre}</td>
@@ -91,7 +106,7 @@ export function QuotationList({
                       ? new Date(q.fechaExpiracion).toLocaleDateString('es-PE')
                       : 'N/A'}
                   </td>
-                  <td className="px-6 py-4 font-medium text-gray-900">
+                  <td className="px-6 py-4 font-bold text-gray-900">
                     S/ {q.totalCotizado.toFixed(2)}
                   </td>
                   <td className="px-6 py-4">
@@ -104,31 +119,26 @@ export function QuotationList({
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div
-                      className="flex items-center justify-end gap-2"
-                      style={{ minWidth: '320px' }}
-                    >
+                    <div className="flex items-center justify-end gap-2 opacity-90 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onDownloadPdf(q.id);
                         }}
-                        className="px-3 py-1.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
+                        className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         title="Descargar PDF"
                       >
-                        <Download size={16} />
-                        PDF
+                        <Download size={18} />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onSendEmail(q);
                         }}
-                        className="px-3 py-1.5 text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
+                        className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         title="Enviar por Correo"
                       >
-                        <Mail size={16} />
-                        Enviar
+                        <Mail size={18} />
                       </button>
                       {q.estado !== 'ACEPTADA' ? (
                         <button
@@ -136,11 +146,10 @@ export function QuotationList({
                             e.stopPropagation();
                             onOpenAcceptDialog(q);
                           }}
-                          className="px-3 py-1.5 text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
-                          style={{ minWidth: '110px' }}
+                          className="w-24 px-3 py-1.5 text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors text-xs font-medium flex items-center justify-center gap-1"
                           title="Marcar como Aceptada"
                         >
-                          <CheckCircle size={16} />
+                          <CheckCircle size={14} />
                           Aceptar
                         </button>
                       ) : (
@@ -150,12 +159,11 @@ export function QuotationList({
                             onConvertToSale(q.id);
                           }}
                           disabled={isConverting}
-                          className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium text-sm inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                          style={{ minWidth: '110px' }}
+                          className="w-24 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-xs font-medium flex items-center justify-center gap-1 disabled:opacity-50"
                           title="Generar Venta"
                         >
-                          <ShoppingCart size={16} />
-                          {isConverting ? 'Generando...' : 'Venta'}
+                          <ShoppingCart size={14} />
+                          Venta
                         </button>
                       )}
                     </div>
@@ -164,14 +172,43 @@ export function QuotationList({
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                  No hay cotizaciones que mostrar
+                <td colSpan={7} className="px-6 py-20 text-center text-gray-500">
+                  <div className="flex flex-col items-center gap-2">
+                    <ShoppingCart size={32} className="opacity-20" />
+                    <p>No se encontraron cotizaciones</p>
+                  </div>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer */}
+      {totalPages > 1 && onPageChange && (
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between sticky bottom-0 z-10">
+          <div className="text-sm text-gray-500">
+            Página <span className="font-medium text-gray-900">{page + 1}</span> de{' '}
+            <span className="font-medium text-gray-900">{totalPages}</span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => onPageChange(page - 1)}
+              disabled={page === 0}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Anterior
+            </button>
+            <button
+              onClick={() => onPageChange(page + 1)}
+              disabled={page >= totalPages - 1}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -36,6 +36,12 @@ export function useQuotation() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
+  // Pagination State
+  const [page, setPage] = useState(0);
+  const pageSize = 10; // Fixed page size
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   // Form State
   const [formData, setFormData] = useState<QuotationFormData>({
     clienteId: null,
@@ -71,18 +77,20 @@ export function useQuotation() {
 
   // Load initial data
   useEffect(() => {
-    loadQuotations();
+    loadQuotations(page, pageSize);
     loadClientes();
     loadVendedores();
     loadProductos();
-  }, []);
+  }, [page, pageSize]); // Reload when page or pageSize changes
 
-  const loadQuotations = async () => {
+  const loadQuotations = async (currentPage = page, size = pageSize) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await cotizacionService.listarCotizaciones();
-      setQuotations(data);
+      const data = await cotizacionService.listarCotizaciones(currentPage, size);
+      setQuotations(data.content);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Error al cargar las cotizaciones');
@@ -90,6 +98,10 @@ export function useQuotation() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   const loadClientes = async () => {
@@ -121,6 +133,12 @@ export function useQuotation() {
   };
 
   // Filtered Quotations
+  // Note: Searching/Filtering logically conflicts with server-side pagination unless the API supports search params.
+  // For now, we will apply client-side filtering on the current page, OR we should implement server-side search.
+  // Given the requirement is pagination, we'll keep simple filters on the current page for now,
+  // but ideally modify the API to accept search terms.
+  // For "Buscador", typically it should be server-side.
+  // But let's keep it simple: filter the *current page* results.
   const filteredQuotations = quotations.filter((q) => {
     const matchesSearch =
       q.numCotizacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -465,5 +483,12 @@ export function useQuotation() {
     handleDownloadPdf,
     handleViewDetail,
     handleBackToList,
+
+    // Pagination
+    page,
+    pageSize,
+    totalPages,
+    totalElements,
+    handlePageChange,
   };
 }
