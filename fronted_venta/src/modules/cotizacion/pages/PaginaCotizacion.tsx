@@ -80,6 +80,9 @@ export function PaginaCotizacion() {
           onViewDetail={hookData.handleViewDetail}
           isLoading={hookData.isLoading}
           isConverting={hookData.isConverting}
+          page={hookData.page}
+          totalPages={hookData.totalPages}
+          onPageChange={hookData.handlePageChange}
         />
       ) : hookData.viewMode === 'DETAIL' ? (
         hookData.selectedQuotationDetail && (
