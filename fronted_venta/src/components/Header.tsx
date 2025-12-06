@@ -1,11 +1,33 @@
 import { BellIcon } from './Icons';
 import { UserAvatar } from './UserAvatar';
+import { useLocation } from 'react-router-dom';
 
 export function Header() {
+  const location = useLocation();
+
+  const getPageTitle = () => {
+    switch (location.pathname) {
+      case '/pagina-cotizacion':
+        return 'Gestión de Cotización';
+      case '/pagina-cliente':
+        return 'Gestión de Clientes';
+      case '/':
+        return 'Gestión de Ventas';
+      case '/pagina-vendedor':
+        return 'Gestión de Vendedores';
+      case '/pagina-combos':
+        return 'Gestión de Combos';
+      case '/admin/cupones':
+        return 'Gestión de Cupones';
+      default:
+        return 'Módulo de Ventas';
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shadow-sm">
       <div className="flex items-center gap-4 flex-1">
-        <span className="text-xl font-semibold text-gray-900">Frame</span>
+        <span className="text-xl font-semibold text-gray-900">{getPageTitle()}</span>
         <div className="flex-1 max-w-md">
           <input
             type="text"
