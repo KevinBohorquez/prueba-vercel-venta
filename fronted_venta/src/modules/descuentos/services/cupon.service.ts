@@ -48,11 +48,54 @@ export const crearCupon = async (data: CrearCuponRequest): Promise<CuponResponse
 };
 
 // Aquí irían los otros métodos CRUD (listarCupones, obtenerPorId, etc.)
-// Ejemplo de listar:
-export const listarCupones = async (): Promise<CuponResponse[]> => {
+// --------------------------------------------------------
+// 2. LISTAR TODOS LOS CUPONES
+// --------------------------------------------------------
+export const listarTodosLosCupones = async (): Promise<CuponResponse[]> => {
     const response = await fetch(CUPON_API_URL);
     if (!response.ok) {
-        throw new Error(`Error al listar cupones (HTTP ${response.status})`);
+        throw new Error(`Error ${response.status}: No se pudo cargar la lista de cupones.`);
     }
     return response.json() as Promise<CuponResponse[]>;
+};
+
+// --------------------------------------------------------
+// 3. ACTUALIZAR CUPÓN
+// --------------------------------------------------------
+export const actualizarCupon = async (id: number, data: CrearCuponRequest): Promise<CuponResponse> => {
+    const requestBody = {
+        ...data,
+        usosMaximos: data.usosMaximos === 0 ? null : data.usosMaximos,
+    };
+    
+    const response = await fetch(`${CUPON_API_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+        let errorMessage = `Error al actualizar el cupón (HTTP ${response.status})`;
+        try { const errorData = await response.json(); errorMessage = errorData.message || errorData.mensaje || errorMessage; } catch (e) {}
+        throw new Error(errorMessage);
+    }
+    return response.json() as Promise<CuponResponse>;
+};
+
+
+// --------------------------------------------------------
+// 4. ELIMINAR CUPÓN
+// --------------------------------------------------------
+export const eliminarCupon = async (id: number): Promise<void> => {
+    const response = await fetch(`${CUPON_API_URL}/${id}`, {
+        method: 'DELETE',
+    });
+
+    if (response.status === 404) {
+        throw new Error(`Cupón con ID ${id} no encontrado.`);
+    }
+    if (!response.ok && response.status !== 204) { // 204 No Content es una respuesta válida sin cuerpo
+        throw new Error(`Error ${response.status} al eliminar el cupón.`);
+    }
+    // Si es 204 (No Content), la promesa se resuelve sin valor de retorno.
 };
