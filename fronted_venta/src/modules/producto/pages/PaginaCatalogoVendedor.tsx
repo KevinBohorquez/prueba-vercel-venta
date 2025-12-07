@@ -4,12 +4,12 @@ import axios from 'axios';
 import type { TipoProducto, ProductoDTO } from '../types/product.types';
 
 
-const API_BASE_URL = 'http://localhost:8080/api/productos'; // Asumiendo el puerto de Spring Boot
+const API_BASE_URL = 'https://mod-ventas.onrender.com/swagger-ui/api/productos'; // Asumiendo el puerto de Spring Boot
 
 export const PaginaCatalogoVendedor: React.FC = () => {
   const [productos, setProductos] = useState<ProductoDTO[]>([]);
   const [filtro, setFiltro] = useState<TipoProducto | 'TODOS'>('TODOS');
-  
+
   // Nota: Esto es solo un placeholder, deberías usar imágenes reales en producción
   const getImageUrl = (tipo: TipoProducto): string => {
     switch (tipo) {
@@ -44,7 +44,7 @@ export const PaginaCatalogoVendedor: React.FC = () => {
   ];
 
   return (
-    
+
       <div className="p-8">
         <h1 className="text-3xl font-bold mb-6">🛒 Catálogo de Productos y Combos</h1>
 
@@ -69,9 +69,9 @@ export const PaginaCatalogoVendedor: React.FC = () => {
           {productos.map(producto => (
             <div key={producto.id} className="bg-white border rounded-xl shadow-lg hover:shadow-xl transition duration-300 overflow-hidden">
               {/* Imagen Referencial */}
-              <img 
-                src={getImageUrl(producto.tipo)} 
-                alt={producto.nombre} 
+              <img
+                src={getImageUrl(producto.tipo)}
+                alt={producto.nombre}
                 className="w-full h-40 object-cover"
               />
 
@@ -112,6 +112,6 @@ export const PaginaCatalogoVendedor: React.FC = () => {
           )}
         </div>
       </div>
-    
+
   );
 };
