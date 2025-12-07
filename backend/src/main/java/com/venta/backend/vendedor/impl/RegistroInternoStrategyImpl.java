@@ -1,6 +1,6 @@
 package com.venta.backend.vendedor.impl;
 
-import com.venta.backend.vendedor.adapters.IEmpleadoAdapter;
+import com.venta.backend.vendedor.infraestructura.adapters.IEmpleadoAdapter;
 import com.venta.backend.vendedor.dto.request.RegistroVendedorRequest;
 import com.venta.backend.vendedor.strategies.IRegistroVendedorStrategy;
 import com.venta.backend.vendedor.exceptions.RecursoNoEncontradoException;
