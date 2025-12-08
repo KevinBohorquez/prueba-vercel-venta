@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/reportes")
@@ -32,9 +33,9 @@ public class ReportesController {
         return ResponseEntity.ok(reporte);
     }
 
-    // --- OPCIÓN 2: DESCARGAR EXCEL COMPLETO ---
+    // --- OPCIÓN 2: DESCARGAR EXCEL (AGRUPADO VISUALMENTE) ---
     @GetMapping("/descargar-excel")
-    @Operation(summary = "Descargar Excel Completo", description = "Genera y descarga un archivo .xlsx con TODAS las columnas disponibles.")
+    @Operation(summary = "Descargar Excel Completo", description = "Genera y descarga un archivo .xlsx con agrupación visual de ventas.")
     public ResponseEntity<byte[]> descargarExcel() throws IOException {
 
         List<ReporteVentaProjection> data = reportesRepository.obtenerReporteGeneral();
@@ -53,28 +54,22 @@ public class ReportesController {
             headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             headerStyle.setAlignment(HorizontalAlignment.CENTER);
+            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-            // Estilos de datos
             CellStyle dateStyle = workbook.createCellStyle();
             dateStyle.setDataFormat(workbook.createDataFormat().getFormat("yyyy-mm-dd hh:mm"));
 
             CellStyle currencyStyle = workbook.createCellStyle();
             currencyStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0.00"));
 
-            // --- CABECERAS (TODAS LAS COLUMNAS) ---
+            // --- CABECERAS ---
             String[] columnas = {
-                    // A. CLIENTE
-                    "ID Cliente", "DNI/RUC", "Nombre Cliente", "Email", "Categoría", "Distrito", "Canal Favorito",
-                    // B. MÉTRICAS
-                    "Ventas Históricas", "Monto Acumulado", "Desc. Acumulado", "Última Compra", "Total Cotizaciones", "Cotiz. Aceptadas",
-                    // C. TRANSACCIÓN
-                    "ID Venta", "Comprobante", "Fecha Venta", "Estado", "Método Pago", "Origen",
-                    // D. DETALLE
-                    "Producto", "Tipo Prod.", "Cantidad", "Precio Unit.", "Desc. Item",
-                    // E. ATRIBUCIÓN
-                    "Vendedor", "Tipo Vendedor", "Sede", "Campaña Lead",
-                    // F. TOTALES & CONTRATOS
-                    "Subtotal Venta", "Desc. Total Venta", "Total Final", "¿Es Contrato?", "Num. Contrato", "Monto Mensual"
+                    // Cabecera de la Venta (Datos Generales)
+                    "ID Venta", "Fecha", "Cliente", "DNI/RUC", "Email",
+                    // Detalle del Producto (Esto cambia en cada fila)
+                    "Producto", "Tipo", "Cant.", "Precio Unit.", "Subtotal Item",
+                    // Atribución y Totales (Datos Generales)
+                    "Vendedor", "Sede", "Total Venta", "¿Contrato?", "Monto Mensual"
             };
 
             Row headerRow = sheet.createRow(0);
@@ -84,114 +79,87 @@ public class ReportesController {
                 cell.setCellStyle(headerStyle);
             }
 
-            // --- LLENADO DE DATOS ---
+            // --- VARIABLES DE CONTROL PARA AGRUPACIÓN VISUAL ---
+            Long lastVentaId = null;
             int rowIdx = 1;
+
             for (ReporteVentaProjection fila : data) {
                 Row row = sheet.createRow(rowIdx++);
                 int colIdx = 0;
 
-                // A. CLIENTE
-                row.createCell(colIdx++).setCellValue(fila.getCliente_id() != null ? fila.getCliente_id() : 0);
-                row.createCell(colIdx++).setCellValue(fila.getDni() != null ? fila.getDni() : "-");
-                row.createCell(colIdx++).setCellValue(fila.getNombreCliente() != null ? fila.getNombreCliente() : "Anónimo");
-                row.createCell(colIdx++).setCellValue(fila.getEmailCliente() != null ? fila.getEmailCliente() : "-");
-                row.createCell(colIdx++).setCellValue(fila.getCategoriaFidelidad() != null ? fila.getCategoriaFidelidad() : "-");
-                row.createCell(colIdx++).setCellValue(fila.getDistritoPrincipal() != null ? fila.getDistritoPrincipal() : "-");
-                row.createCell(colIdx++).setCellValue(fila.getCanalContactoFavorito() != null ? fila.getCanalContactoFavorito() : "-");
+                // Detectamos si es una nueva venta comparando el ID con la fila anterior
+                boolean isNewSale = !Objects.equals(fila.getVentaId(), lastVentaId);
 
-                // B. MÉTRICAS
-                row.createCell(colIdx++).setCellValue(fila.getMetricaTotalVentas() != null ? fila.getMetricaTotalVentas() : 0);
+                // 1. DATOS DE CABECERA (Solo se imprimen si es una nueva venta)
+                if (isNewSale) {
+                    row.createCell(colIdx++).setCellValue(fila.getVentaId() != null ? fila.getVentaId() : 0);
 
-                Cell cMontoAcum = row.createCell(colIdx++);
-                cMontoAcum.setCellValue(fila.getMetricaMontoAcum() != null ? fila.getMetricaMontoAcum() : 0.0);
-                cMontoAcum.setCellStyle(currencyStyle);
+                    Cell cFecha = row.createCell(colIdx++);
+                    if(fila.getFechaVenta() != null) {
+                        cFecha.setCellValue(fila.getFechaVenta());
+                        cFecha.setCellStyle(dateStyle);
+                    } else { cFecha.setCellValue("-"); }
 
-                Cell cDescAcum = row.createCell(colIdx++);
-                cDescAcum.setCellValue(fila.getMetricaDescAcum() != null ? fila.getMetricaDescAcum() : 0.0);
-                cDescAcum.setCellStyle(currencyStyle);
-
-                Cell cFechaUlt = row.createCell(colIdx++);
-                if(fila.getMetricaFechaUltimaCompra() != null) {
-                    cFechaUlt.setCellValue(fila.getMetricaFechaUltimaCompra());
-                    cFechaUlt.setCellStyle(dateStyle);
+                    row.createCell(colIdx++).setCellValue(fila.getNombreCliente() != null ? fila.getNombreCliente() : "Anónimo");
+                    row.createCell(colIdx++).setCellValue(fila.getDni() != null ? fila.getDni() : "-");
+                    row.createCell(colIdx++).setCellValue(fila.getEmailCliente() != null ? fila.getEmailCliente() : "-");
                 } else {
-                    cFechaUlt.setCellValue("-");
+                    // Si es la misma venta, dejamos estas celdas vacías
+                    colIdx += 5; // Saltamos 5 columnas
                 }
 
-                row.createCell(colIdx++).setCellValue(fila.getMetricaTotalCotizaciones() != null ? fila.getMetricaTotalCotizaciones() : 0);
-                row.createCell(colIdx++).setCellValue(fila.getMetricaCotizAceptadas() != null ? fila.getMetricaCotizAceptadas() : 0);
-
-                // C. TRANSACCIÓN
-                row.createCell(colIdx++).setCellValue(fila.getVentaId() != null ? fila.getVentaId() : 0);
-                row.createCell(colIdx++).setCellValue(fila.getNumComprobante() != null ? fila.getNumComprobante() : "-");
-
-                Cell cFechaVenta = row.createCell(colIdx++);
-                if(fila.getFechaVenta() != null) {
-                    cFechaVenta.setCellValue(fila.getFechaVenta());
-                    cFechaVenta.setCellStyle(dateStyle);
-                } else {
-                    cFechaVenta.setCellValue("-");
-                }
-
-                row.createCell(colIdx++).setCellValue(fila.getEstadoVenta() != null ? fila.getEstadoVenta() : "-");
-                row.createCell(colIdx++).setCellValue(fila.getMetodoPago() != null ? fila.getMetodoPago() : "-");
-                row.createCell(colIdx++).setCellValue(fila.getOrigenVenta() != null ? fila.getOrigenVenta() : "-");
-
-                // D. DETALLE
+                // 2. DATOS DE PRODUCTO (Se imprimen SIEMPRE, fila a fila)
                 row.createCell(colIdx++).setCellValue(fila.getNombreProducto() != null ? fila.getNombreProducto() : "-");
                 row.createCell(colIdx++).setCellValue(fila.getTipoProducto() != null ? fila.getTipoProducto() : "-");
                 row.createCell(colIdx++).setCellValue(fila.getCantidadVendida() != null ? fila.getCantidadVendida() : 0);
 
-                Cell cPrecioUnit = row.createCell(colIdx++);
-                cPrecioUnit.setCellValue(fila.getPrecioUnitarioVenta() != null ? fila.getPrecioUnitarioVenta() : 0.0);
-                cPrecioUnit.setCellStyle(currencyStyle);
+                Cell cPrecio = row.createCell(colIdx++);
+                cPrecio.setCellValue(fila.getPrecioUnitarioVenta() != null ? fila.getPrecioUnitarioVenta() : 0.0);
+                cPrecio.setCellStyle(currencyStyle);
 
-                Cell cDescItem = row.createCell(colIdx++);
-                cDescItem.setCellValue(fila.getDescuentoMontoItem() != null ? fila.getDescuentoMontoItem() : 0.0);
-                cDescItem.setCellStyle(currencyStyle);
+                // Cálculo simple de subtotal item
+                Cell cSubItem = row.createCell(colIdx++);
+                double subTotalCalc = (fila.getPrecioUnitarioVenta() != null ? fila.getPrecioUnitarioVenta() : 0.0)
+                        * (fila.getCantidadVendida() != null ? fila.getCantidadVendida() : 0);
+                cSubItem.setCellValue(subTotalCalc);
+                cSubItem.setCellStyle(currencyStyle);
 
-                // E. ATRIBUCIÓN
-                row.createCell(colIdx++).setCellValue(fila.getVendedorNombre() != null ? fila.getVendedorNombre() : "Sin Asignar");
-                row.createCell(colIdx++).setCellValue(fila.getVendedorTipo() != null ? fila.getVendedorTipo() : "-");
-                row.createCell(colIdx++).setCellValue(fila.getSedeVenta() != null ? fila.getSedeVenta() : "-");
-                row.createCell(colIdx++).setCellValue(fila.getLeadCampania() != null ? fila.getLeadCampania() : "Orgánico");
+                // 3. ATRIBUCIÓN Y TOTALES (Solo se imprimen si es una nueva venta)
+                if (isNewSale) {
+                    row.createCell(colIdx++).setCellValue(fila.getVendedorNombre() != null ? fila.getVendedorNombre() : "-");
+                    row.createCell(colIdx++).setCellValue(fila.getSedeVenta() != null ? fila.getSedeVenta() : "-");
 
-                // F. TOTALES & CONTRATOS
-                Cell cSubtotal = row.createCell(colIdx++);
-                cSubtotal.setCellValue(fila.getSubtotalVenta() != null ? fila.getSubtotalVenta() : 0.0);
-                cSubtotal.setCellStyle(currencyStyle);
+                    Cell cTotal = row.createCell(colIdx++);
+                    cTotal.setCellValue(fila.getTotalFinalVenta() != null ? fila.getTotalFinalVenta() : 0.0);
+                    cTotal.setCellStyle(currencyStyle);
 
-                Cell cDescTotal = row.createCell(colIdx++);
-                cDescTotal.setCellValue(fila.getDescuentoTotalVenta() != null ? fila.getDescuentoTotalVenta() : 0.0);
-                cDescTotal.setCellStyle(currencyStyle);
+                    boolean esContrato = fila.getEsContratoRecurrente() != null && fila.getEsContratoRecurrente() == 1;
+                    row.createCell(colIdx++).setCellValue(esContrato ? "SÍ" : "NO");
 
-                Cell cTotal = row.createCell(colIdx++);
-                cTotal.setCellValue(fila.getTotalFinalVenta() != null ? fila.getTotalFinalVenta() : 0.0);
-                cTotal.setCellStyle(currencyStyle);
+                    Cell cMontoM = row.createCell(colIdx++);
+                    if(fila.getContratoMontoMensual() != null) {
+                        cMontoM.setCellValue(fila.getContratoMontoMensual());
+                        cMontoM.setCellStyle(currencyStyle);
+                    } else { cMontoM.setCellValue("-"); }
 
-                // Contratos
-                boolean esContrato = fila.getEsContratoRecurrente() != null && fila.getEsContratoRecurrente() == 1;
-                row.createCell(colIdx++).setCellValue(esContrato ? "SÍ" : "NO");
-                row.createCell(colIdx++).setCellValue(fila.getContratoNumero() != null ? fila.getContratoNumero() : "-");
-
-                Cell cMontoContrato = row.createCell(colIdx++);
-                if (fila.getContratoMontoMensual() != null) {
-                    cMontoContrato.setCellValue(fila.getContratoMontoMensual());
-                    cMontoContrato.setCellStyle(currencyStyle);
                 } else {
-                    cMontoContrato.setCellValue("-");
+                    // Celdas vacías para el resto
+                    // No hace falta rellenar con "", Excel las asume vacías si no escribimos nada.
                 }
+
+                // Guardamos el ID actual para compararlo en la siguiente vuelta
+                lastVentaId = fila.getVentaId();
             }
 
-            // AUTOAJUSTAR COLUMNAS (Solo las primeras para no tardar mucho si hay miles de filas)
+            // Ancho de columnas fijo para evitar lentitud
             for (int i = 0; i < columnas.length; i++) {
-                sheet.setColumnWidth(i, 5000); // Ancho fijo moderado para rendimiento
+                sheet.setColumnWidth(i, 4500);
             }
 
             workbook.write(out);
 
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Reporte_Completo_" + System.currentTimeMillis() + ".xlsx")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Reporte_Ventas_Agrupado_" + System.currentTimeMillis() + ".xlsx")
                     .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                     .body(out.toByteArray());
         }
