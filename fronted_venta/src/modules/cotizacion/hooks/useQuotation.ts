@@ -69,6 +69,19 @@ export function useQuotation() {
   // Create Client Modal State
   const [createClientModalOpen, setCreateClientModalOpen] = useState(false);
 
+  // Notification Modal State
+  const [notificationModal, setNotificationModal] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error' | 'info' | 'warning';
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: '',
+  });
+
   // Detail View State
   const [selectedQuotationDetail, setSelectedQuotationDetail] = useState<QuotationResponse | null>(
     null
@@ -270,7 +283,12 @@ export function useQuotation() {
       // Reload quotations and return to list view
       await loadQuotations();
       setViewMode('LIST');
-      alert('Cotización creada exitosamente');
+      setNotificationModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Cotización creada',
+        message: 'La cotización ha sido creada exitosamente',
+      });
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Error al crear la cotización');
@@ -282,7 +300,12 @@ export function useQuotation() {
 
   const handleGeneratePDF = (id: number) => {
     // TODO: Implement PDF generation
-    alert(`Generando PDF para la cotización #${id}... (Funcionalidad pendiente)`);
+    setNotificationModal({
+      isOpen: true,
+      type: 'info',
+      title: 'Funcionalidad pendiente',
+      message: `Generando PDF para la cotización #${id}... (Funcionalidad pendiente)`,
+    });
   };
 
   const handleOpenEmailDialog = (quotation: Quotation) => {
@@ -307,7 +330,12 @@ export function useQuotation() {
 
       setEmailDialogOpen(false);
       setSelectedQuotationForEmail(null);
-      alert('Cotización enviada exitosamente');
+      setNotificationModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Cotización enviada',
+        message: 'La cotización ha sido enviada exitosamente',
+      });
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Error al enviar la cotización');
@@ -360,29 +388,30 @@ export function useQuotation() {
     setIsConverting(true);
     setError(null);
     try {
-      // Call backend API to convert quotation to sale
-      const response = await fetch(`/api/venta/desde-cotizacion/${id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al convertir cotización a venta');
-      }
-
-      const ventaData = await response.json();
+      // Call backend API to convert quotation to sale using the service
+      const ventaData = await cotizacionService.convertirAVenta(id);
 
       // Show success message
-      alert(`¡Venta creada exitosamente! Número: ${ventaData.numVenta}`);
+      setNotificationModal({
+        isOpen: true,
+        type: 'success',
+        title: '¡Venta creada exitosamente!',
+        message: `Número de venta: ${ventaData.numVenta}`,
+      });
 
-      // Redirect to sales module
-      window.location.href = '/ventas';
+      // Redirect to sales module after a short delay
+      setTimeout(() => {
+        window.location.href = '/venta';
+      }, 2000);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Error al convertir cotización a venta');
-      alert('Error al convertir cotización a venta. Por favor, intente nuevamente.');
+      setNotificationModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Error al convertir',
+        message: 'Error al convertir cotización a venta. Por favor, intente nuevamente.',
+      });
     } finally {
       setIsConverting(false);
     }
@@ -461,6 +490,10 @@ export function useQuotation() {
     // Create Client Modal State
     createClientModalOpen,
     setCreateClientModalOpen,
+
+    // Notification Modal State
+    notificationModal,
+    setNotificationModal,
 
     // Detail View State
     selectedQuotationDetail,

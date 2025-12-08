@@ -1,14 +1,14 @@
-import { Route, Routes } from "react-router-dom"
-import { PaginaVenta } from "./modules/venta/pages/PaginaVenta"
-import { PaginaCliente } from "./paginas/PaginaCliente"
+import { Route, Routes } from 'react-router-dom';
+import { PaginaVenta } from './modules/venta/pages/PaginaVenta';
+import { PaginaCliente } from './paginas/PaginaCliente';
 import { PaginaCotizacion } from './modules/cotizacion/pages/PaginaCotizacion';
 import { LayoutPrincipal } from './components/layout/LayoutPrincipal';
-import { PaginaNoEncontrada } from "./paginas/PaginaNoEncontrada"
-import Login from "./components/Login"
-import { useRole } from "./contexts/RoleContext"
-import { PaginaVendedor } from "./modules/vendedor/pages/PaginaVendedor"
-import { PaginaVentaDirecta } from "./modules/venta/pages/PaginaVentaDirecta"
-import { PaginaVentaLead } from "./modules/venta/pages/PaginaVentaLead"
+import { PaginaNoEncontrada } from './paginas/PaginaNoEncontrada';
+import Login from './components/Login';
+import { useRole } from './contexts/RoleContext';
+import { PaginaVendedor } from './modules/vendedor/pages/PaginaVendedor';
+import { PaginaVentaDirecta } from './modules/venta/pages/PaginaVentaDirecta';
+import { PaginaVentaLead } from './modules/venta/pages/PaginaVentaLead';
 import PaginaCuponesAdmin from './paginas/PaginaCuponesAdmin';
 import { PaginaCombos } from './paginas/PaginaCombos';
 import { PaginaDashboard } from './paginas/PaginaDashboard';
@@ -23,6 +23,7 @@ function App() {
     <Routes>
       <Route path="/" element={<LayoutPrincipal />}>
         <Route index element={<PaginaVenta />} />
+        <Route path="venta" element={<PaginaVenta />} />
         <Route path="registrar-venta" element={<PaginaVentaDirecta />} />
         <Route path="registrar-venta-lead" element={<PaginaVentaLead />} />
         <Route path="pagina-cotizacion" element={<PaginaCotizacion />} />

@@ -113,4 +113,23 @@ export const cotizacionService = {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   },
+
+  /**
+   * Convert quotation to sale - USA LA API
+   * Endpoint: POST /api/venta/desde-cotizacion/{id}
+   */
+  async convertirAVenta(id: number): Promise<{ numVenta: string }> {
+    const response = await fetch(`${API_BASE_URL}/venta/desde-cotizacion/${id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al convertir cotización a venta');
+    }
+
+    return response.json();
+  },
 };
