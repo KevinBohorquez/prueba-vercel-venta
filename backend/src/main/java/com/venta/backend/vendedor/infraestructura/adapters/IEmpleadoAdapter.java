@@ -1,4 +1,4 @@
-package com.venta.backend.vendedor.adapters;
+package com.venta.backend.vendedor.infraestructura.adapters;
 
 import com.venta.backend.vendedor.entities.Vendedor;
 import com.venta.backend.vendedor.infraestructura.clientes.dto.EmpleadoRRHHDTO;

@@ -15,7 +15,7 @@ public interface IStrategyFactory {
     IRegistroVendedorStrategy getRegistrationStrategy(SellerType sellerType);
 
     /**
-     * Obtiene la estrategia de EDICIÓN adecuada (Interna o Externa).
+     * Obtiene la estrategia de EDICION adecuada (Interna o Externa).
      *
      * @param sellerType El tipo de vendedor (INTERNAL o EXTERNAL).
      * @return La implementación de IEdicionVendedorStrategia correspondiente.
