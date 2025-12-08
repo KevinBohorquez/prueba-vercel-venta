@@ -3,6 +3,7 @@ import type {
   CotizacionRequest,
   EnviarCotizacionRequest,
   QuotationResponse,
+  PaginatedResponse,
 } from '../types/quotation.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
@@ -11,14 +12,14 @@ export const cotizacionService = {
   /**
    * List all quotations - USA LA API (with pagination)
    */
-  async listarCotizaciones(): Promise<Quotation[]> {
-    const response = await fetch(`${API_BASE_URL}/cotizaciones?page=0&size=100`);
+  async listarCotizaciones(page = 0, size = 10): Promise<PaginatedResponse<Quotation>> {
+    const response = await fetch(
+      `${API_BASE_URL}/cotizaciones?page=${page}&size=${size}&sort=fechaCotizacion,desc`
+    );
     if (!response.ok) {
       throw new Error('Error al cargar las cotizaciones');
     }
-    const paginatedResponse = await response.json();
-    // Extract the content array from the paginated response
-    return paginatedResponse.content || [];
+    return response.json();
   },
 
   /**
@@ -111,5 +112,24 @@ export const cotizacionService = {
     // Cleanup
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  },
+
+  /**
+   * Convert quotation to sale - USA LA API
+   * Endpoint: POST /api/venta/desde-cotizacion/{id}
+   */
+  async convertirAVenta(id: number): Promise<{ numVenta: string }> {
+    const response = await fetch(`${API_BASE_URL}/venta/desde-cotizacion/${id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al convertir cotización a venta');
+    }
+
+    return response.json();
   },
 };

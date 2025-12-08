@@ -5,6 +5,7 @@ import { QuotationDetail } from '../components/QuotationDetail';
 import { EmailDialog } from '../components/EmailDialog';
 import { AcceptQuotationDialog } from '../components/AcceptQuotationDialog';
 import { ModalCrearCliente } from '../../clientes/components/ModalCrearCliente';
+import { NotificationModal } from '../components/NotificationModal';
 
 export function PaginaCotizacion() {
   const hookData = useQuotation();
@@ -80,6 +81,9 @@ export function PaginaCotizacion() {
           onViewDetail={hookData.handleViewDetail}
           isLoading={hookData.isLoading}
           isConverting={hookData.isConverting}
+          page={hookData.page}
+          totalPages={hookData.totalPages}
+          onPageChange={hookData.handlePageChange}
         />
       ) : hookData.viewMode === 'DETAIL' ? (
         hookData.selectedQuotationDetail && (
@@ -165,6 +169,20 @@ export function PaginaCotizacion() {
           }}
         />
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={hookData.notificationModal.isOpen}
+        type={hookData.notificationModal.type}
+        title={hookData.notificationModal.title}
+        message={hookData.notificationModal.message}
+        onClose={() =>
+          hookData.setNotificationModal({
+            ...hookData.notificationModal,
+            isOpen: false,
+          })
+        }
+      />
     </div>
   );
 }

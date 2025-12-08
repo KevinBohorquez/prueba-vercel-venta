@@ -284,7 +284,7 @@ export const ProductCatalogModal: React.FC<ProductCatalogModalProps> = ({ isOpen
                     <div className="aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 relative border-b border-gray-100 flex items-center justify-center">
                       {product.image ? (
                         <img
-                          src={product.image.startsWith('http') ? product.image : `http://localhost:8080${product.image}`}
+                          src={product.image.startsWith('http') ? product.image : `http://localhost0${product.image}`}
                           alt={product.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {

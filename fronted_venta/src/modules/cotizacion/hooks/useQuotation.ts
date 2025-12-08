@@ -36,6 +36,12 @@ export function useQuotation() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
+  // Pagination State
+  const [page, setPage] = useState(0);
+  const pageSize = 10; // Fixed page size
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   // Form State
   const [formData, setFormData] = useState<QuotationFormData>({
     clienteId: null,
@@ -63,6 +69,19 @@ export function useQuotation() {
   // Create Client Modal State
   const [createClientModalOpen, setCreateClientModalOpen] = useState(false);
 
+  // Notification Modal State
+  const [notificationModal, setNotificationModal] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error' | 'info' | 'warning';
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: '',
+  });
+
   // Detail View State
   const [selectedQuotationDetail, setSelectedQuotationDetail] = useState<QuotationResponse | null>(
     null
@@ -71,18 +90,20 @@ export function useQuotation() {
 
   // Load initial data
   useEffect(() => {
-    loadQuotations();
+    loadQuotations(page, pageSize);
     loadClientes();
     loadVendedores();
     loadProductos();
-  }, []);
+  }, [page, pageSize]); // Reload when page or pageSize changes
 
-  const loadQuotations = async () => {
+  const loadQuotations = async (currentPage = page, size = pageSize) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await cotizacionService.listarCotizaciones();
-      setQuotations(data);
+      const data = await cotizacionService.listarCotizaciones(currentPage, size);
+      setQuotations(data.content);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Error al cargar las cotizaciones');
@@ -90,6 +111,10 @@ export function useQuotation() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   const loadClientes = async () => {
@@ -121,6 +146,12 @@ export function useQuotation() {
   };
 
   // Filtered Quotations
+  // Note: Searching/Filtering logically conflicts with server-side pagination unless the API supports search params.
+  // For now, we will apply client-side filtering on the current page, OR we should implement server-side search.
+  // Given the requirement is pagination, we'll keep simple filters on the current page for now,
+  // but ideally modify the API to accept search terms.
+  // For "Buscador", typically it should be server-side.
+  // But let's keep it simple: filter the *current page* results.
   const filteredQuotations = quotations.filter((q) => {
     const matchesSearch =
       q.numCotizacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -252,7 +283,12 @@ export function useQuotation() {
       // Reload quotations and return to list view
       await loadQuotations();
       setViewMode('LIST');
-      alert('Cotización creada exitosamente');
+      setNotificationModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Cotización creada',
+        message: 'La cotización ha sido creada exitosamente',
+      });
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Error al crear la cotización');
@@ -264,7 +300,12 @@ export function useQuotation() {
 
   const handleGeneratePDF = (id: number) => {
     // TODO: Implement PDF generation
-    alert(`Generando PDF para la cotización #${id}... (Funcionalidad pendiente)`);
+    setNotificationModal({
+      isOpen: true,
+      type: 'info',
+      title: 'Funcionalidad pendiente',
+      message: `Generando PDF para la cotización #${id}... (Funcionalidad pendiente)`,
+    });
   };
 
   const handleOpenEmailDialog = (quotation: Quotation) => {
@@ -289,7 +330,12 @@ export function useQuotation() {
 
       setEmailDialogOpen(false);
       setSelectedQuotationForEmail(null);
-      alert('Cotización enviada exitosamente');
+      setNotificationModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Cotización enviada',
+        message: 'La cotización ha sido enviada exitosamente',
+      });
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Error al enviar la cotización');
@@ -342,29 +388,30 @@ export function useQuotation() {
     setIsConverting(true);
     setError(null);
     try {
-      // Call backend API to convert quotation to sale
-      const response = await fetch(`/api/venta/desde-cotizacion/${id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al convertir cotización a venta');
-      }
-
-      const ventaData = await response.json();
+      // Call backend API to convert quotation to sale using the service
+      const ventaData = await cotizacionService.convertirAVenta(id);
 
       // Show success message
-      alert(`¡Venta creada exitosamente! Número: ${ventaData.numVenta}`);
+      setNotificationModal({
+        isOpen: true,
+        type: 'success',
+        title: '¡Venta creada exitosamente!',
+        message: `Número de venta: ${ventaData.numVenta}`,
+      });
 
-      // Redirect to sales module
-      window.location.href = '/ventas';
+      // Redirect to sales module after a short delay
+      setTimeout(() => {
+        window.location.href = '/venta';
+      }, 2000);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Error al convertir cotización a venta');
-      alert('Error al convertir cotización a venta. Por favor, intente nuevamente.');
+      setNotificationModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Error al convertir',
+        message: 'Error al convertir cotización a venta. Por favor, intente nuevamente.',
+      });
     } finally {
       setIsConverting(false);
     }
@@ -444,6 +491,10 @@ export function useQuotation() {
     createClientModalOpen,
     setCreateClientModalOpen,
 
+    // Notification Modal State
+    notificationModal,
+    setNotificationModal,
+
     // Detail View State
     selectedQuotationDetail,
     isLoadingDetail,
@@ -465,5 +516,12 @@ export function useQuotation() {
     handleDownloadPdf,
     handleViewDetail,
     handleBackToList,
+
+    // Pagination
+    page,
+    pageSize,
+    totalPages,
+    totalElements,
+    handlePageChange,
   };
 }

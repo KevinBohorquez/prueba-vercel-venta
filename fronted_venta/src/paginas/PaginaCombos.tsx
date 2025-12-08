@@ -6,7 +6,7 @@ interface ProductoSeleccionable extends ProductoDTO {
   seleccionado: boolean;
 }
 
-const API_BASE_URL = 'http://localhost:8080/api/productos';
+const API_BASE_URL = 'https://mod-ventas.onrender.com/api/productos' ;
 
 export function PaginaCombos() {
   const [comboName, setComboName] = useState('');

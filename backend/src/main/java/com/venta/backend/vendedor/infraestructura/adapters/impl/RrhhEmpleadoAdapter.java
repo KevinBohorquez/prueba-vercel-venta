@@ -1,6 +1,6 @@
-package com.venta.backend.vendedor.adapters.impl;
+package com.venta.backend.vendedor.infraestructura.adapters.impl;
 
-import com.venta.backend.vendedor.adapters.IEmpleadoAdapter;
+import com.venta.backend.vendedor.infraestructura.adapters.IEmpleadoAdapter;
 import com.venta.backend.vendedor.entities.Vendedor;
 import com.venta.backend.vendedor.enums.DocumentType;
 import com.venta.backend.vendedor.enums.SellerStatus;

@@ -1,8 +1,5 @@
-// fronted_venta/src/components/SellerTable.tsx
-
 import StatusPill from "./StatusPill";
 import TypePill from "./TypePill";
-// Asegúrate de importar SellerTableProps y SellerStatus desde el archivo corregido
 import { type SellerTableProps, SellerStatus } from "../types/seller.types";
 
 const SellerTable = ({ sellers, onDeactivate, onActivate, onEdit }: SellerTableProps) => (
@@ -32,7 +29,6 @@ const SellerTable = ({ sellers, onDeactivate, onActivate, onEdit }: SellerTableP
               <TypePill type={seller.type} />
             </td>
 
-            {/* 🔑 CORRECCIÓN: Acceder a la propiedad .name del objeto sede */}
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
               {seller.sede ? (typeof seller.sede === 'string' ? seller.sede : seller.sede.name) : 'N/A'}
             </td>
@@ -44,7 +40,6 @@ const SellerTable = ({ sellers, onDeactivate, onActivate, onEdit }: SellerTableP
               <button
                   onClick={(e) => {
                       e.preventDefault();
-                      // Llamamos a onEdit, convirtiendo el ID de vuelta a número
                       onEdit(Number(seller.id));
                   }}
                   className="text-blue-600 hover:text-blue-800"

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Edit, UserX, History } from 'lucide-react';
+import { Edit, UserX, History, Download } from 'lucide-react'; // <--- 1. Agregado icono Download
 import { ModalActualizarCliente } from '../modules/clientes/components/ModalActualizarCliente';
 import { ModalCrearCliente } from '../modules/clientes/components/ModalCrearCliente';
 import { ModalHistorialCompras } from '../modules/clientes/components/ModalHistorialCompras';
@@ -44,6 +44,35 @@ export function PaginaCliente() {
 
   const handleBuscar = () => {
     cargarClientes();
+  };
+
+  // --- 2. NUEVA FUNCIÓN PARA DESCARGAR EL EXCEL ---
+  const handleDescargarExcel = async () => {
+    try {
+      // Ajusta la URL si tu backend corre en otro puerto
+      const response = await fetch('http://localhost:8080/api/reportes/descargar-excel', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${token}`, // Si usas token, descomenta esto
+        },
+      });
+
+      if (!response.ok) throw new Error('Error al generar el reporte en el backend');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reporte_Ventas_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error descargando el excel:', error);
+      alert('No se pudo descargar el reporte. Verifica que el backend esté corriendo.');
+    }
   };
 
   const handleOpenEditar = (clienteId: number) => {
@@ -140,6 +169,17 @@ export function PaginaCliente() {
               >
                 Buscar
               </button>
+
+              {/* --- 3. BOTÓN EXCEL AGREGADO --- */}
+              <button
+                onClick={handleDescargarExcel}
+                className="h-10 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium shadow-sm whitespace-nowrap flex items-center gap-2"
+                title="Descargar reporte completo"
+              >
+                <Download size={18} />
+                <span>Excel</span>
+              </button>
+
               <button
                 onClick={() => setIsCreateOpen(true)}
                 className="h-10 px-4 py-2 bg-[#3C83F6] text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm whitespace-nowrap"
@@ -168,33 +208,33 @@ export function PaginaCliente() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-gray-50 text-gray-600 font-medium text-sm uppercase tracking-wider">
-                <tr>
-                  <th className="px-6 py-4">Nombre</th>
-                  <th className="px-6 py-4">DNI/RUC</th>
-                  <th className="px-6 py-4">Email</th>
-                  <th className="px-6 py-4">Teléfono</th>
-                  <th className="px-6 py-4">Estado</th>
-                  <th className="px-6 py-4 text-right">Acciones</th>
-                </tr>
+              <tr>
+                <th className="px-6 py-4">Nombre</th>
+                <th className="px-6 py-4">DNI/RUC</th>
+                <th className="px-6 py-4">Email</th>
+                <th className="px-6 py-4">Teléfono</th>
+                <th className="px-6 py-4">Estado</th>
+                <th className="px-6 py-4 text-right">Acciones</th>
+              </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                      Cargando clientes...
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    Cargando clientes...
+                  </td>
+                </tr>
+              ) : clientes.length > 0 ? (
+                clientes.map((cliente) => (
+                  <tr key={cliente.clienteId} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-gray-900">{cliente.fullName}</p>
+                      <p className="text-xs text-gray-500">ID: {cliente.clienteId}</p>
                     </td>
-                  </tr>
-                ) : clientes.length > 0 ? (
-                  clientes.map((cliente) => (
-                    <tr key={cliente.clienteId} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <p className="font-medium text-gray-900">{cliente.fullName}</p>
-                        <p className="text-xs text-gray-500">ID: {cliente.clienteId}</p>
-                      </td>
-                      <td className="px-6 py-4 text-gray-700">{cliente.dni || '—'}</td>
-                      <td className="px-6 py-4 text-gray-700">{cliente.email || '—'}</td>
-                      <td className="px-6 py-4 text-gray-700">{cliente.phoneNumber || '—'}</td>
-                      <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-gray-700">{cliente.dni || '—'}</td>
+                    <td className="px-6 py-4 text-gray-700">{cliente.email || '—'}</td>
+                    <td className="px-6 py-4 text-gray-700">{cliente.phoneNumber || '—'}</td>
+                    <td className="px-6 py-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${getEstadoBadge(
                             cliente.estado
@@ -202,44 +242,44 @@ export function PaginaCliente() {
                         >
                           {cliente.estado === 'INACTIVO' ? 'Inactivo' : 'Activo'}
                         </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleOpenEditar(cliente.clienteId)}
-                            className="px-3 py-1.5 text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
-                            title="Editar Cliente"
-                          >
-                            <Edit size={16} />
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleCambiarEstado(cliente, 'INACTIVO')}
-                            className="px-3 py-1.5 text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
-                            title="Desactivar Cliente"
-                          >
-                            <UserX size={16} />
-                            Desactivar
-                          </button>
-                          <button
-                            onClick={() => handleOpenHistorial(cliente)}
-                            className="px-3 py-1.5 text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
-                            title="Ver Historial"
-                          >
-                            <History size={16} />
-                            Historial
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                      No hay clientes que mostrar
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenEditar(cliente.clienteId)}
+                          className="px-3 py-1.5 text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
+                          title="Editar Cliente"
+                        >
+                          <Edit size={16} />
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleCambiarEstado(cliente, 'INACTIVO')}
+                          className="px-3 py-1.5 text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
+                          title="Desactivar Cliente"
+                        >
+                          <UserX size={16} />
+                          Desactivar
+                        </button>
+                        <button
+                          onClick={() => handleOpenHistorial(cliente)}
+                          className="px-3 py-1.5 text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-all font-medium text-sm inline-flex items-center gap-1.5"
+                          title="Ver Historial"
+                        >
+                          <History size={16} />
+                          Historial
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                )}
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    No hay clientes que mostrar
+                  </td>
+                </tr>
+              )}
               </tbody>
             </table>
           </div>

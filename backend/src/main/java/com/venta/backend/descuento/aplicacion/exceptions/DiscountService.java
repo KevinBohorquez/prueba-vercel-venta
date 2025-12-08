@@ -53,19 +53,19 @@ public class DiscountService {
             BigDecimal totalVenta = venta.calcularTotal();
 
             if (cuponOpt.isEmpty()) {
-                // **Motivo: No existe**
+                // *Motivo: No existe*
                 throw new CuponNoValidoException("El cupón '" + codigoCupon + "' no existe.");
             }
 
             Cupon cupon = cuponOpt.get();
 
             if (cupon.estaExpirado()) {
-                // **Motivo: Vencido**
+                // *Motivo: Vencido*
                 throw new CuponNoValidoException("El cupón '" + codigoCupon + "' está expirado (Fecha: " + cupon.getFechaExpiracion() + ").");
             }
 
             if (!cupon.tieneUsosDisponibles()) {
-                // **Motivo: Usos agotados**
+                // *Motivo: Usos agotados*
                 throw new CuponNoValidoException("El cupón '" + codigoCupon + "' ya fue utilizado la cantidad máxima de veces.");
             }
 

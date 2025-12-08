@@ -2,12 +2,9 @@ import React, { useState, useEffect } from 'react';
 import type { VendedorResponse, ErrorResponse } from '../types/Vendedor'; // Ajusta la ruta
 
 interface SellerDisplayProps {
-  /** El ID del vendedor a buscar, recibido como prop del componente padre. */
   sellerId: number | null;
 
-  /** URL base de tu backend. */
   backendBaseUrl?: string;
-
   /** Callback opcional para notificar al componente padre cuando se carguen los datos del vendedor. */
   onSellerDataLoaded?: (data: VendedorResponse | null) => void;
 }
@@ -71,11 +68,7 @@ const SellerDisplayWidget: React.FC<SellerDisplayProps> = ({
     fetchSeller();
   }, [sellerId, backendBaseUrl, onSellerDataLoaded]);
 
-  // ----------------------------------------------------
-  // Lógica de Renderizado Compacto con Tailwind
-  // ----------------------------------------------------
-
-  // 1. Estado de Carga
+  // Estado de Carga
   if (isLoading) {
     return (
       <div className="p-2 text-sm text-center text-blue-600 bg-blue-50 border border-blue-300 rounded-md">
@@ -84,7 +77,7 @@ const SellerDisplayWidget: React.FC<SellerDisplayProps> = ({
     );
   }
 
-  // 2. Estado de Error/No encontrado/Inactivo
+  // Estado de Error/No encontrado/Inactivo
   if (statusText || (vendedorData && vendedorData.sellerStatus === 'INACTIVE')) {
     return (
       <div className="p-2 text-sm text-red-700 bg-red-50 border border-red-300 rounded-md">
@@ -94,7 +87,7 @@ const SellerDisplayWidget: React.FC<SellerDisplayProps> = ({
     );
   }
 
-  // 3. Estado de Éxito: Vendedor ACTIVO
+  // Estado de Éxito: Vendedor ACTIVO
   if (vendedorData) {
     return (
       <div className="p-3 text-sm text-green-800 bg-green-50 border border-green-300 rounded-md shadow-sm">
@@ -109,7 +102,7 @@ const SellerDisplayWidget: React.FC<SellerDisplayProps> = ({
     );
   }
 
-  // 4. Estado inicial (sin ID o ID reseteado)
+  // Estado inicial (sin ID o ID reseteado)
   return null;
 };
 

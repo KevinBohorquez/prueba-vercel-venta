@@ -7,7 +7,7 @@ const SellerToolbar = ({onNewSellerClick, onFilterChange} : SellerToolbarProps) 
       <input
         type="text"
         placeholder="Buscar por DNI..."
-        // 2. Notificamos el cambio del filtro 'dni'
+        // Notificamos el cambio del filtro 'dni'
         onChange={(e) => onFilterChange('dni', e.target.value)}
         className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
@@ -18,7 +18,7 @@ const SellerToolbar = ({onNewSellerClick, onFilterChange} : SellerToolbarProps) 
 
       {/* Filtro Tipo de Vendedor */}
       <select
-        // 3. Notificamos el cambio del filtro 'sellerType'
+        // Notificamos el cambio del filtro 'sellerType'
         onChange={(e) => onFilterChange('sellerType', e.target.value)}
         className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none">
         <option value="">Todo Tipo</option>
@@ -28,7 +28,7 @@ const SellerToolbar = ({onNewSellerClick, onFilterChange} : SellerToolbarProps) 
 
       {/* Filtro Estado del Vendedor */}
       <select
-        // 4. Notificamos el cambio del filtro 'sellerStatus'
+        // Notificamos el cambio del filtro 'sellerStatus'
         onChange={(e) => onFilterChange('sellerStatus', e.target.value)}
         className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none">
         <option value="">Todo Estado</option>

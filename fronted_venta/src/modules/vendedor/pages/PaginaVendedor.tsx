@@ -9,7 +9,6 @@ import SellerPagination from '../components/SellerPagination';
 
 type TabId = 'vendedores' | 'sedes';
 
-// 1. OBTENER LA URL DEL ENTORNO VITE (se carga automáticamente)
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 // La estructura de respuesta de la API es Page<VendedorResponse>
@@ -17,15 +16,14 @@ interface PageResponse {
   content: VendedorResponse[];
   totalPages: number;
   totalElements: number;
-  number: number; // Índice de la página actual (Ej: 0 o 1)
-  size: number; // Tamaño de la página (Ej: 20)
-  // Otros campos: first, last, empty...
+  number: number; // Índice de la página actual
+  size: number; // Tamaño de la página
 }
 
 interface FilterState {
   sellerType: string;
   sellerStatus: string;
-  sellerBranchId: string; // Usaremos string para el input y convertiremos a number/null si es necesario
+  sellerBranchId: string; // Usaremos string para el input y convertiremos a number/null
   dni: string;
   page: number;
 }
@@ -83,7 +81,7 @@ export function PaginaVendedor() {
     { id: 'sedes', label: 'Sedes de Venta' },
   ];
 
-  // 3. Función para hacer la llamada a la API
+  // Función para hacer la llamada a la API
   const fetchSellers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -202,17 +200,14 @@ export function PaginaVendedor() {
       }
 
       try {
-        // Usaremos un endpoint PATCH/PUT para cambiar el estado a ACTIVO
-        // Asume que el backend tiene el endpoint: PATCH /api/vendedores/{id}/activate
+        // Usaremos un endpoint PUT para cambiar el estado a ACTIVO
         const response = await fetch(`${API_BASE_URL}/vendedores/${sellerId}/reactivar`, {
           method: 'POST',
         });
 
         if (response.ok) {
-          // Verifica si el código es 2xx (e.g., 200 OK)
-          // Éxito: Reactivación completada
           alert(`Vendedor ${sellerId} reactivado exitosamente.`);
-          fetchSellers(); // Refrescar la tabla para mostrar el nuevo estado ACTIVE
+          fetchSellers();
         } else if (response.status === 404) {
           alert(`Error: Vendedor ${sellerId} no existe.`);
         } else {
@@ -231,13 +226,13 @@ export function PaginaVendedor() {
 
   const handleEditSeller = useCallback(async (sellerId: number) => {
     try {
-      // 1. Obtener los datos actuales del vendedor del backend
+      // Obtener los datos actuales del vendedor del backend
       const response = await fetch(`${API_BASE_URL}/vendedores/${sellerId}`);
       if (!response.ok) throw new Error('No se pudo cargar el vendedor para editar.');
 
       const sellerData: VendedorResponse = await response.json();
 
-      // 2. Almacenar los datos y abrir el modal
+      // Almacenar los datos y abrir el modal
       setSellerToEdit(sellerData);
       setIsCreateModalOpen(true);
     } catch (e: unknown) {
